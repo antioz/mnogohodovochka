@@ -61,7 +61,7 @@
   .axes{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin-bottom:16px; padding:12px 14px; background:#f6f5f2; border-radius:8px; }
   .axes label{ font-size:12.5px; color:var(--muted); display:flex; flex-direction:column; gap:4px; flex:1 1 220px; }
   .axes select{ font-size:14px; padding:7px 8px; border-radius:6px; border:1px solid var(--line); background:#fff; width:100%; }
-  .axes .swap{ font-size:16px; padding:6px 12px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--accent); }
+  .axes .swap, .axes .rand{ font-size:16px; padding:6px 12px; border-radius:6px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--accent); }
   .stat{ font-size:12.5px; color:var(--muted); margin:-6px 0 12px; }
   table.matrix td.sel{ outline:3px solid var(--accent2); outline-offset:-3px; }
   table.matrix th.corner{ font-size:11px; color:var(--muted); font-weight:500; }
@@ -112,6 +112,12 @@
 .slice-tab.on{background:var(--accent,#2f5d50);border-color:var(--accent,#2f5d50);color:#fff}
 .slice-tab.on span{color:#dfe9e5}
 .slice-tab:disabled{opacity:.4;cursor:default}
+  .axes .rand{ font-size:14px; padding:8px 14px; white-space:nowrap; }
+  table.fc th.corner{ width:200px; }
+  table.fc td.rowhead{ white-space:normal; vertical-align:top; }
+  .fc-list .cnt{ font-size:11px; color:var(--muted); margin-left:3px; }
+  .fc-more summary{ cursor:pointer; font-size:12px; color:var(--accent); margin-top:4px; }
+  .fc-empty{ font-size:12px; color:var(--muted); }
 </style>
 </head>
 <body>
@@ -134,6 +140,7 @@
       <button class="swap" id="swapAxes" title="Поменять местами">⇄</button>
       <label>Столбцы<select id="colSel"></select></label>
       <label>Срез<select id="sliceSel"></select></label>
+      <button class="rand" id="randAxes" title="Случайные строки, столбцы и срез">собрать случайно</button>
     </div>
     <div class="slice-tabs" id="sliceTabs"></div>
     <div class="basis-title" id="matrixTitle"></div>
@@ -1111,12 +1118,19 @@ function forecastFor(k, p){
 }
 let SPLIT = 'none';
 let STRICT = 'both';
+let MINPREC = 2;   // сколько разных организаций должны дать прецедент той же фазы
+const FC_SHOW = 12; // сколько позиций видно в клетке, остальные под «ещё»
 const CARRIERS3 = ['человек','команда','человеко-машинная система'];
 function splitOf(pos){
   if(SPLIT==='k'){ const q=(typeof POS_QUAL!=='undefined'&&POS_QUAL[pos])||null; return q ? q.classes.map(c=>`${c.code} ${QCLASS[c.code]||''}`) : []; }
   return [];
 }
 function lineMark(r){ return r.lines===2 ? '●●' : (r.analog.length ? '●○' : '○●'); }
+const precOrgs = r => new Set(r.analog.map(it=>it.n)).size;
+// порог прецедентов: позиция, которую дала одна организация, — случай, а не закономерность
+function passPrec(r){ return r.analog.length ? precOrgs(r) >= MINPREC : STRICT==='any'; }
+function passStrict(r, noDem){ return STRICT==='both' ? (r.lines===2 || (noDem && r.analog.length>0)) : STRICT==='analog' ? r.analog.length>0 : true; }
+const passAgg = (r, noDem) => (r.lines===2 || (noDem && r.analog.length>0)) && precOrgs(r) >= MINPREC;
 function renderForecast(){
   const box = document.getElementById('forecastBox'); if(!box) return;
   if(!CYC_KEYS.length){ box.closest('.card').hidden = true; return; }
@@ -1129,25 +1143,39 @@ function renderForecast(){
     <option value="both"${STRICT==='both'?' selected':''}>сошлись обе линии: прецедент той же фазы и запрос фазы к классу работы</option>
     <option value="analog"${STRICT==='analog'?' selected':''}>есть прецедент той же фазы</option>
     <option value="any"${STRICT==='any'?' selected':''}>любая линия</option>
-  </select></label></div>`;
+  </select></label>
+  <label>Прецедент дали не меньше<select id="precSel">
+    ${[1,2,3,4].map(n=>`<option value="${n}"${MINPREC===n?' selected':''}>${n===1?'1 организации (все случаи)':n+' разных организаций'}</option>`).join('')}
+  </select></label></div>
+  <div class="fc-legend">×N — сколько разных организаций дали позицию в той же фазе прошлых циклов. Пятилетки, где оптика стоит в одной фазе, слиты в одну клетку: прогноз по такой оптике в них не различается.</div>`;
   h += '<div class="scrollx"><table class="matrix fc"><tr><th class="corner">оптика ↓ / пятилетка →</th>' + PENTADS.map(p=>`<th>${pentLabel(p)}</th>`).join('') + '</tr>';
   CYC_KEYS.forEach(k=>{
     h += `<tr><td class="rowhead">${CYCLES[k].label}</td>`;
-    PENTADS.forEach(p=>{
-      const fc = forecastFor(k,p); const key=pentLabel(p);
-      agg[key]=agg[key]||{};
+    const cols = PENTADS.map(p=>({p, fc:forecastFor(k,p)}));
+    cols.forEach(({p,fc})=>{
+      const key=pentLabel(p); agg[key]=agg[key]||{};
       const nd0 = !((fc.info.demand||[]).length);
-      fc.list.forEach(r=>{ if(r.lines===2 || (nd0 && r.analog.length)) (agg[key][r.pos]=agg[key][r.pos]||[]).push(k); });
+      fc.list.forEach(r=>{ if(passAgg(r,nd0)) (agg[key][r.pos]=agg[key][r.pos]||[]).push(k); });
+    });
+    const segs = []; cols.forEach(c=>{ const last=segs[segs.length-1]; if(last && last.fc.phase===c.fc.phase) last.to=c.p[1], last.n++; else segs.push({from:c.p[0], to:c.p[1], n:1, p:c.p, fc:c.fc}); });
+    segs.forEach(sg=>{
+      const fc = sg.fc; const key = pentLabel(sg.p);
       const noDem = !((fc.info.demand||[]).length);
-      const shown = STRICT==='both' ? fc.list.filter(r=>r.lines===2 || (noDem && r.analog.length)) : STRICT==='analog' ? fc.list.filter(r=>r.analog.length) : fc.list;
-      const lis = shown.map(r=>{ const sub=splitOf(r.pos); return `<li><a href="#" class="fc-pos" data-k="${k}" data-p="${key}" data-pos="${encodeURIComponent(r.pos)}">${r.pos}</a>${sub.length?'<ul class="splitlist">'+sub.map(s=>`<li>${r.pos} · ${s}</li>`).join('')+'</ul>':''}</li>`; }).join('');
-      h += `<td class="cell" title="Фаза: ${fc.phase}">${lis?`<ul class="poslist fc-list">${lis}</ul>`:'<span class="muted">—</span>'}</td>`;
+      const shown = fc.list.filter(r=>passStrict(r,noDem) && passPrec(r)).sort((a,b)=> b.lines-a.lines || precOrgs(b)-precOrgs(a) || b.fit.length-a.fit.length);
+      const li = r=>{ const sub=splitOf(r.pos); const n=precOrgs(r); return `<li><a href="#" class="fc-pos" data-k="${k}" data-p="${key}" data-pos="${encodeURIComponent(r.pos)}">${r.pos}</a>${n?`<span class="cnt">×${n}</span>`:''}${sub.length?'<ul class="splitlist">'+sub.map(s=>`<li>${r.pos} · ${s}</li>`).join('')+'</ul>':''}</li>`; };
+      const head = `<div class="fc-phase">${sg.n>1?`${sg.from}–${sg.to} · `:''}${isOut(fc.phase)?'оптика сюда не доходит':fc.phase}</div>`;
+      let body;
+      if(isOut(fc.phase)) body = '';
+      else if(!shown.length) body = '<span class="fc-empty">нет позиций по выбранным условиям</span>';
+      else body = `<ul class="poslist fc-list">${shown.slice(0,FC_SHOW).map(li).join('')}</ul>` +
+        (shown.length>FC_SHOW ? `<details class="fc-more"><summary>ещё ${shown.length-FC_SHOW}</summary><ul class="poslist fc-list">${shown.slice(FC_SHOW).map(li).join('')}</ul></details>` : '');
+      h += `<td class="cell"${sg.n>1?` colspan="${sg.n}"`:''} title="Фаза: ${fc.phase}">${head}${body}</td>`;
     });
     h += '</tr>';
   });
   h += '<tr><td class="rowhead">Совпадения большинства оптик</td>';
   PENTADS.forEach(p=>{
-    const active = CYC_KEYS.filter(k=>{ const f=forecastFor(k,p); const nd=!((f.info.demand||[]).length); return f.list.some(r=>r.lines===2||(nd&&r.analog.length)); }).length;
+    const active = CYC_KEYS.filter(k=>{ const f=forecastFor(k,p); const nd=!((f.info.demand||[]).length); return f.list.some(r=>passAgg(r,nd)); }).length;
     const need = Math.max(2, Math.ceil(active/2));
     const list = Object.entries(agg[pentLabel(p)]||{}).filter(([,ks])=>ks.length>=need).sort((a,b)=>b[1].length-a[1].length);
     h += `<td class="cell">${list.length?'<ul class="poslist">'+list.map(([pos,ks])=>`<li title="${ks.map(k=>CYCLES[k].label).join(', ')}">${pos}</li>`).join('')+'</ul>':'<span class="muted">—</span>'}</td>`;
@@ -1156,6 +1184,7 @@ function renderForecast(){
   box.innerHTML = h;
   document.getElementById('splitSel').addEventListener('change', e=>{ SPLIT=e.target.value; renderForecast(); });
   document.getElementById('strictSel').addEventListener('change', e=>{ STRICT=e.target.value; renderForecast(); });
+  document.getElementById('precSel').addEventListener('change', e=>{ MINPREC=+e.target.value; renderForecast(); });
   box.querySelectorAll('.fc-pos').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); showWhy(a.dataset.k, a.dataset.p, decodeURIComponent(a.dataset.pos)); }));
 }
 function showWhy(k, pKey, pos){
@@ -1199,6 +1228,26 @@ function renderMeta(){
 document.getElementById('rowSel').addEventListener('change', e=>{ state.row = e.target.value; syncDisabled(); render(); });
 document.getElementById('colSel').addEventListener('change', e=>{ state.col = e.target.value; syncDisabled(); render(); });
 document.getElementById('sliceSel').addEventListener('change', e=>{ state.slice = e.target.value; state.sliceVal = null; syncDisabled(); render(); });
+// «собрать случайно»: строки, столбцы и срез наугад; сочетание берётся, если в таблице заполнено хотя бы 3 клетки
+document.getElementById('randAxes').addEventListener('click', ()=>{
+  const keys = [...document.querySelectorAll('#rowSel option')].map(o=>o.value).filter(k=>BASE_BY_KEY[k]);
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const prev = {...state}; let ok = false;
+  for(let i=0; i<40 && !ok; i++){
+    state.row = pick(keys); state.col = pick(keys.filter(k=>k!==state.row));
+    state.slice = Math.random()<0.5 ? 'none' : pick(keys.filter(k=>k!==state.row && k!==state.col));
+    state.sliceVal = null;
+    const sb = sliceBase(); if(sb) state.sliceVal = sb.values.find(v=>ITEMS.some(it=>valsOf(it,sb).includes(v))) ?? null;
+    if(state.row===prev.row && state.col===prev.col && state.slice===prev.slice) continue;
+    const g = buildGrid(BASE_BY_KEY[state.row], BASE_BY_KEY[state.col]);
+    ok = Object.values(g).filter(c=>c.type!=='empty').length >= 3;
+  }
+  state.cell = null;
+  document.getElementById('rowSel').value = state.row;
+  document.getElementById('colSel').value = state.col;
+  document.getElementById('sliceSel').value = state.slice;
+  syncDisabled(); render();
+});
 document.getElementById('swapAxes').addEventListener('click', ()=>{
   [state.row, state.col] = [state.col, state.row];
   document.getElementById('rowSel').value = state.row;
