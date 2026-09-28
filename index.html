@@ -104,6 +104,14 @@
   .fc-why .close{ position:absolute; top:8px; right:10px; font-size:20px; background:none; border:none; cursor:pointer; color:var(--muted); }
   .splitlist{ list-style:circle; padding-left:14px; margin:2px 0 4px; color:var(--muted); font-size:11px; }
   .fc-axes{ margin-bottom:10px; }
+.slice-tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 12px}
+.slice-tabs:empty{display:none}
+.slice-lbl{font-size:13px;color:var(--muted,#666);margin-right:4px}
+.slice-tab{font:inherit;font-size:13px;padding:5px 10px;border:1px solid var(--line,#ddd);border-radius:14px;background:#fff;cursor:pointer}
+.slice-tab span{color:var(--muted,#888);font-size:12px}
+.slice-tab.on{background:var(--accent,#2f5d50);border-color:var(--accent,#2f5d50);color:#fff}
+.slice-tab.on span{color:#dfe9e5}
+.slice-tab:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -112,7 +120,7 @@
   <div class="sub">Многоходовочка, Онтоклуб «108». Материал — <code>kruty-organizovannosti-88.md</code>, ход работы — <code>hod-raboty.md</code>.</div>
 
   <div class="disclaimer" style="border-left-color:var(--accent)">
-    <b>Как читать.</b> Выберите два основания: одно задаёт строки, другое столбцы. Все 92 организованности раскладываются по этой паре заново, и у каждой пары свои клетки и свои позиции. В клетке стоит список позиций. <b>Жирная позиция с пометкой ×N</b> встретилась у N организованностей этой клетки. <b>Пусто</b>: пример не нашёлся, из этого ещё не следует, что его нет. Клик по клетке показывает организованности по позициям, клик по позиции открывает её разбор.
+    <b>Как читать.</b> Выберите два основания: одно задаёт строки, другое столбцы. Третье основание — срез: таблица показывает один его слой, слои переключаются вкладками под выбором. Все 92 организованности раскладываются по этой паре заново, и у каждой пары свои клетки и свои позиции. В клетке стоит список позиций. <b>Жирная позиция с пометкой ×N</b> встретилась у N организованностей этой клетки. <b>Пусто</b>: пример не нашёлся, из этого ещё не следует, что его нет. Клик по клетке показывает организованности по позициям, клик по позиции открывает её разбор.
   </div>
 
   <div class="disclaimer">
@@ -125,7 +133,9 @@
       <label>Строки<select id="rowSel"></select></label>
       <button class="swap" id="swapAxes" title="Поменять местами">⇄</button>
       <label>Столбцы<select id="colSel"></select></label>
+      <label>Срез<select id="sliceSel"></select></label>
     </div>
+    <div class="slice-tabs" id="sliceTabs"></div>
     <div class="basis-title" id="matrixTitle"></div>
     <div class="stat" id="matrixStat"></div>
     <div class="scrollx"><table class="matrix" id="matrixTable"></table></div>
@@ -695,7 +705,8 @@ function dsApplyH(){
 
 function yaCellMarks(rowKey, rowVal, colKey, colVal){
   if(!YA_DATA || rowKey==="vyb" || colKey==="vyb") return "";
-  const hit = YA_DATA.items.filter(e => String(e[rowKey])===String(rowVal) && String(e[colKey])===String(colVal));
+  const sb = (typeof sliceBase==='function') ? sliceBase() : null;
+  const hit = YA_DATA.items.filter(e => String(e[rowKey])===String(rowVal) && String(e[colKey])===String(colVal) && (!sb || sb.key==='vyb' || String(e[sb.key])===String(state.sliceVal)));
   if(!hit.length) return "";
   return '<div class="ya-marks">' + hit.map(e => `<span class="ya-mark" title="${yaEsc(e.anomaly||'')}">я · ${yaEsc(e.n)}${e.y!=null?' · '+e.y:''}</span>`).join("") + "</div>";
 }
@@ -879,7 +890,11 @@ const QUESTIONS = [
   { key:"qualification", title:"8. Требуемая квалификация",      q:"Какие знания, умения, опыт и личные качества нужны, чтобы занимать эту позицию?" }
 ];
 
-const state = { row:"obj", col:"b", cell:null };
+const state = { row:"obj", col:"b", slice:"none", sliceVal:null, cell:null };
+// срез: третье основание, таблица показывает один его слой
+function sliceBase(){ return state.slice==='none' ? null : BASE_BY_KEY[state.slice]; }
+function sliceOk(it){ const sb=sliceBase(); return !sb || valsOf(it,sb).includes(state.sliceVal); }
+function sliceItems(){ return sliceBase() ? ITEMS.filter(sliceOk) : ITEMS; }
 
 function classifyCell(list){
   if(list.length===0) return { type:'empty', byPos:{}, list };
@@ -896,7 +911,8 @@ function classifyCell(list){
 function buildGrid(rowBase, colBase){
   const grid = {};
   rowBase.values.forEach(r=>colBase.values.forEach(c=>{
-    grid[r+'|'+c] = classifyCell(ITEMS.filter(it=>valsOf(it,rowBase).includes(r) && valsOf(it,colBase).includes(c)));
+    const src = sliceItems();
+    grid[r+'|'+c] = classifyCell(src.filter(it=>valsOf(it,rowBase).includes(r) && valsOf(it,colBase).includes(c)));
   }));
   return grid;
 }
@@ -920,26 +936,44 @@ function fillSelects(){
       `<optgroup label="${g}">` + BASES.filter(b=>b.group===g).map(b=>`<option value="${b.key}">${b.label}</option>`).join('') + '</optgroup>'
     ).join('');
   });
+  document.getElementById('sliceSel').innerHTML = '<option value="none">без среза</option>' + GROUP_ORDER.map(g=>
+    `<optgroup label="${g}">` + BASES.filter(b=>b.group===g).map(b=>`<option value="${b.key}">${b.label}</option>`).join('') + '</optgroup>'
+  ).join('');
   document.getElementById('rowSel').value = state.row;
   document.getElementById('colSel').value = state.col;
+  document.getElementById('sliceSel').value = state.slice;
   syncDisabled();
 }
 
 function syncDisabled(){
   document.querySelectorAll('#rowSel option').forEach(o=>o.disabled = o.value===state.col);
-  document.querySelectorAll('#colSel option').forEach(o=>o.disabled = o.value===state.row);
+  document.querySelectorAll('#colSel option').forEach(o=>o.disabled = o.value===state.row || o.value===state.slice);
+  document.querySelectorAll('#rowSel option').forEach(o=>{ if(o.value===state.slice) o.disabled = true; });
+  document.querySelectorAll('#sliceSel option').forEach(o=>o.disabled = o.value!=='none' && (o.value===state.row || o.value===state.col));
+}
+function renderSliceTabs(){
+  const box = document.getElementById('sliceTabs'); if(!box) return;
+  const sb = sliceBase(); if(!sb){ box.innerHTML=''; state.sliceVal=null; return; }
+  const cnt = v => ITEMS.filter(it=>valsOf(it,sb).includes(v)).length;
+  const vals = sb.values.map(v=>({v, n:cnt(v)}));
+  if(!vals.some(x=>x.v===state.sliceVal && x.n)) { const f = vals.find(x=>x.n); state.sliceVal = f ? f.v : sb.values[0]; }
+  box.innerHTML = `<span class="slice-lbl">Слой «${sb.label}»:</span>` + vals.map(x=>
+    `<button class="slice-tab${x.v===state.sliceVal?' on':''}" data-v="${encodeURIComponent(x.v)}"${x.n?'':' disabled'}>${valName(sb,x.v)} <span>${x.n}</span></button>`).join('');
+  box.querySelectorAll('.slice-tab').forEach(b=>b.addEventListener('click', ()=>{ state.sliceVal = decodeURIComponent(b.dataset.v); render(); }));
 }
 
 function render(){
   const rowBase = BASE_BY_KEY[state.row], colBase = BASE_BY_KEY[state.col];
+  renderSliceTabs();
   const grid = buildGrid(rowBase, colBase);
+  const sb = sliceBase();
   document.getElementById('matrixTitle').textContent =
-    `${rowBase.label[0].toUpperCase()+rowBase.label.slice(1)} × ${colBase.label}`;
+    `${rowBase.label[0].toUpperCase()+rowBase.label.slice(1)} × ${colBase.label}` + (sb ? ` · срез: ${sb.label} = ${valName(sb,state.sliceVal)}` : '');
 
   const cells = Object.values(grid);
   const cnt = t => cells.filter(i=>i.type===t).length;
   document.getElementById('matrixStat').innerHTML =
-    `Клеток: ${cells.length} · заполнено: ${cells.length-cnt('empty')} · пустых: ${cnt('empty')}` + (HAS_UNITS ? ` · в материале: ${ORGS.length} организаций, ${ITEMS.length} позиций-в-организациях, ${new Set(ITEMS.map(i=>i.po)).size} позиций каталога` : '');
+    `Клеток: ${cells.length} · заполнено: ${cells.length-cnt('empty')} · пустых: ${cnt('empty')}` + (HAS_UNITS ? ` · в материале: ${ORGS.length} организаций, ${ITEMS.length} позиций-в-организациях, ${new Set(ITEMS.map(i=>i.po)).size} позиций каталога` : '') + (sb ? ` · в этом слое: ${sliceItems().length} позиций-в-организациях, ${new Set(sliceItems().map(i=>i.po)).size} позиций каталога` : '');
 
   const tbl = document.getElementById('matrixTable');
   tbl.style.minWidth = (140 + colBase.values.length*130) + 'px';
@@ -971,7 +1005,8 @@ function render(){
 function showDetail(r, c, grid){
   const rowBase = BASE_BY_KEY[state.row], colBase = BASE_BY_KEY[state.col];
   const info = grid[r+'|'+c];
-  let head = `<h3>${valName(rowBase,r)} × ${valName(colBase,c)}</h3>`;
+  const sbd = sliceBase();
+  let head = `<h3>${valName(rowBase,r)} × ${valName(colBase,c)}${sbd?' · '+valName(sbd,state.sliceVal):''}</h3>`;
   if(info.type==='empty'){
     head += '<div class="placeholder">Пустая клетка. Причину по данным не определить: организованности не было; она была, но о ней неизвестно; она не могла возникнуть; её не искали целенаправленно.</div>';
     document.getElementById('detail').innerHTML = head; return;
@@ -1163,6 +1198,7 @@ function renderMeta(){
 
 document.getElementById('rowSel').addEventListener('change', e=>{ state.row = e.target.value; syncDisabled(); render(); });
 document.getElementById('colSel').addEventListener('change', e=>{ state.col = e.target.value; syncDisabled(); render(); });
+document.getElementById('sliceSel').addEventListener('change', e=>{ state.slice = e.target.value; state.sliceVal = null; syncDisabled(); render(); });
 document.getElementById('swapAxes').addEventListener('click', ()=>{
   [state.row, state.col] = [state.col, state.row];
   document.getElementById('rowSel').value = state.row;
