@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Куб позиций</title>
+<style>
+:root{color-scheme:light;--bg:#fcfcfb;--card:#fff;--line:#e4e3de;--ink:#0b0b0b;--ink2:#52514e;--ink3:#87867f;
+ --accent:#2a78d6;--mark:#fff6e0;--s2:#eb6834;--badge:#8a5a00;--badgebg:#fff1cc}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#1a1a19;--card:#232322;
+ --line:#3a3a38;--ink:#fff;--ink2:#c3c2b7;--ink3:#8e8d85;--accent:#3987e5;--mark:#2e2a20;--s2:#d95926;--badge:#f0c060;--badgebg:#3a3020}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#1a1a19;--card:#232322;--line:#3a3a38;--ink:#fff;--ink2:#c3c2b7;
+ --ink3:#8e8d85;--accent:#3987e5;--mark:#2e2a20;--s2:#d95926;--badge:#f0c060;--badgebg:#3a3020}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);padding:0;
+ font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+h2{font-size:23px;margin:46px 0 6px;letter-spacing:-.01em;padding-top:6px;line-height:1.25}
+h3{font-size:19px;margin:36px 0 8px;line-height:1.3}
+h4{font-size:16.5px;margin:26px 0 6px;color:var(--ink)}
+p{color:var(--ink2);margin:10px 0}
+strong,b{color:var(--ink)}
+ul,ol{color:var(--ink2);padding-left:22px}
+li{margin:4px 0}
+blockquote{margin:18px 0;padding:4px 0 4px 18px;border-left:3px solid var(--accent);color:var(--ink);font-size:16.5px}
+blockquote p{color:var(--ink)}
+code{font-size:13px;background:var(--mark);padding:1px 4px;border-radius:4px;color:var(--ink2);
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+hr{border:none;border-top:1px solid var(--line);margin:30px 0}
+.tw{max-width:100%;overflow-x:auto;margin:14px 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;font-size:14px;margin:0;min-width:100%}
+td,th{border:1px solid var(--line);padding:6px 9px;vertical-align:top;text-align:left}
+th{background:var(--mark);font-weight:600;color:var(--ink)}
+td{color:var(--ink2);min-width:90px}
+td:first-child{min-width:60px}
+table.wide{font-size:13px}
+table.wide td,table.wide th{min-width:0;padding:6px 7px}
+table.wide td:first-child{min-width:0}
+.kicker{color:var(--accent);font-size:12.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin:0}
+.ph{margin-top:4px;font-size:28px}
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+ color:var(--badge);background:var(--badgebg);border-radius:4px;padding:0 6px;margin:0 2px;line-height:1.6;vertical-align:1px;white-space:nowrap}
+h2 .badge,h3 .badge,h4 .badge{font-size:11px;vertical-align:4px}
+p.chain{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;
+ padding:12px 16px;color:var(--ink);font-weight:500}
+.ask{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:16px 20px;margin:20px 0 30px}
+.ask-l{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.ask p{margin:7px 0 0;color:var(--ink)}
+p.src{font-size:13px;color:var(--ink3);margin-top:30px}
+details.more{margin:18px 0;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:2px 18px}
+details.more summary{cursor:pointer;padding:11px 0;font-weight:600;color:var(--ink);font-size:15px}
+details.more[open]>summary{border-bottom:1px solid var(--line);margin-bottom:4px}
+details.more h3:first-of-type,details.more h4:first-child{margin-top:18px}
+details.fold{margin:16px 0}
+details.fold>summary{cursor:pointer;display:flex;align-items:baseline;gap:10px;padding:6px 0;font-weight:600;color:var(--ink);
+ list-style:none;border-bottom:1px solid var(--line)}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:"";flex:none;width:7px;height:7px;border-right:2px solid var(--ink3);border-bottom:2px solid var(--ink3);
+ transform:rotate(-45deg);transition:transform .15s;position:relative;top:-2px}
+details.fold[open]>summary::before{transform:rotate(45deg)}
+details.fold>summary .cnt{font-weight:400;font-size:13px;color:var(--ink3)}
+details.fold>summary:hover{color:var(--accent)}
+details.fold>.tw{margin-top:10px}
+/* раскладка */
+.layout{display:grid;grid-template-columns:290px minmax(0,1fr);min-height:100vh}
+aside{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);background:var(--card);padding:22px 14px 40px}
+aside .brand{font-size:13px;color:var(--ink3);margin:0 8px 2px}
+aside .title{font-weight:650;font-size:17px;margin:0 8px 16px;line-height:1.3;color:var(--ink)}
+aside ul{list-style:none;margin:0;padding:0}
+aside li{margin:0}
+aside .ch{margin:0 0 6px}
+aside .cht{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;cursor:pointer;font:inherit;font-size:12px;
+ letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:0;padding:5px 8px;text-align:left;border-radius:6px}
+aside .cht:hover{color:var(--ink);background:var(--mark)}
+aside .cht::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+ transform:rotate(-45deg);transition:transform .15s;flex:none}
+aside .ch.open>.cht::before{transform:rotate(45deg)}
+aside .ch>ul{display:none;margin:2px 0 0}
+aside .ch.open>ul{display:block}
+aside li.sg{font-size:11.5px;color:var(--ink3);margin:8px 8px 2px 8px;padding-top:6px;border-top:1px solid var(--line)}
+aside li.sg:first-child{border-top:0;padding-top:0;margin-top:4px}
+aside li.insg>a{padding-left:18px}
+aside a{display:block;text-decoration:none;color:var(--ink2);padding:5px 8px;border-radius:6px;font-size:14.5px;line-height:1.35}
+aside a:hover{background:var(--mark);color:var(--ink)}
+aside a.nl.on{background:var(--mark);color:var(--ink);font-weight:600}
+main{padding:34px 40px 90px;min-width:0}
+main .inner{max-width:920px;margin:0 auto}
+.pgp{display:none}
+.pgp.on{display:block}
+.pn{display:flex;justify-content:space-between;gap:12px;margin-top:48px;padding-top:16px;border-top:1px solid var(--line);font-size:14px}
+.pn a{text-decoration:none;max-width:48%}
+.pn a.nx{text-align:right;margin-left:auto}
+.menu{display:none}
+.scrim{display:none}
+@media (max-width:860px){
+ .layout{grid-template-columns:1fr}
+ aside{position:fixed;inset:0 auto 0 0;width:86vw;max-width:320px;z-index:20;transform:translateX(-102%);transition:transform .2s;box-shadow:0 0 30px rgba(0,0,0,.25)}
+ body.navopen aside{transform:none}
+ body.navopen .scrim{display:block;position:fixed;inset:0;z-index:15;background:rgba(0,0,0,.3)}
+ .menu{display:block;position:sticky;top:0;z-index:10;margin:0;padding:10px 16px;width:100%;text-align:left;background:var(--card);
+  border:0;border-bottom:1px solid var(--line);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+ main{padding:18px 16px 70px}
+ .ph{font-size:24px}
+ h3{font-size:18px}
+ details.more{padding:2px 12px}
+ table{font-size:13px}
+ td,th,table.wide td,table.wide th{min-width:0;padding:5px 6px}
+ td:first-child{min-width:0}
+}
+</style></head>
+<body>
+<button class="menu" type="button">☰ Разделы</button>
+<div class="scrim"></div>
+<div class="layout"><aside><p class="brand">Многоходовочка</p><p class="title">Куб позиций: метод и результаты</p>
+<ul><li class="ch"><button type="button" class="cht">1. Задача</button><ul><li><a class="nl" href="#p1" data-p="p1">Как читать</a></li><li><a class="nl" href="#p2" data-p="p2">Задача</a></li></ul></li><li class="ch"><button type="button" class="cht">2. Метод</button><ul><li><a class="nl" href="#p3" data-p="p3">Метод</a></li></ul></li><li class="ch"><button type="button" class="cht">3. Принципы</button><ul><li><a class="nl" href="#p4" data-p="p4">Принципы</a></li></ul></li><li class="ch"><button type="button" class="cht">4. Конструкция куба</button><ul><li><a class="nl" href="#p5" data-p="p5">Конструкция куба</a></li></ul></li><li class="ch"><button type="button" class="cht" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5. Что показал материал">5. Что показал материал</button><ul><li><a class="nl" href="#p6" data-p="p6">5.1. Позиции и каталог</a></li><li><a class="nl" href="#p7" data-p="p7">5.2. Сквозные и новые позиции</a></li><li><a class="nl" href="#p8" data-p="p8">5.3. Граф передач</a></li><li><a class="nl" href="#p9" data-p="p9">5.4. Основания: шкалы и списки</a></li><li><a class="nl" href="#p10" data-p="p10">5.5. Пустоты: по логике и по выборке</a></li><li><a class="nl" href="#p11" data-p="p11">5.6. Технология мышления</a></li><li><a class="nl" href="#p12" data-p="p12">5.7. Прогноз по фазам</a></li><li><a class="nl" href="#p13" data-p="p13">5.8. Слабое место прогноза</a></li></ul></li><li class="ch"><button type="button" class="cht">6. Главный результат</button><ul><li><a class="nl" href="#p14" data-p="p14">Главный результат</a></li></ul></li><li class="ch"><button type="button" class="cht">7. Чего не хватает и следующий цикл</button><ul><li><a class="nl" href="#p15" data-p="p15">Чего не хватает и следующий цикл</a></li></ul></li><li class="ch"><button type="button" class="cht">8. Источники</button><ul><li><a class="nl" href="#p16" data-p="p16">Источники</a></li></ul></li></ul></aside>
+<main><div class="inner">
+<section class="pgp" id="p1" data-t="Как читать"><p class="kicker">1. Задача</p><h2 class="ph">Как читать</h2>
+<p>29.09.2026. Здесь сведено то, что уже найдено и записано в рабочих файлах многоходовочки. Форма повторяет документ коллеги <code>SRT_2050_объединенное_исследование.html</code>: задача → метод → принципы → конструкция → результаты → главный результат → следующий цикл → источники.</p>
+<p><strong>Как читать.</strong> Пути к файлам даны от корня <code>многоходовочка/</code>. У каждого факта ссылка на файл. Мои обобщения помечены <span class="badge">оценка</span>. Личный слой (позиции автора, «куда», деньги, самодиагностика) сюда не входит. Страница только про куб как метод и про то, что он показал на материале.</p>
+<p><strong>Статус результата.</strong> Это метод, проверенный на четырёх разнородных материалах, и то, что он на них показал. Прогноз матрицы перечисляет позиции, у которых в прошлых фазах того же рода были прецеденты. Что эти позиции возникнут, он не утверждает.</p>
+<div class="pn"><span></span><a class="nx" href="#p2">Задача →</a></div></section><section class="pgp" id="p2" data-t="Задача"><p class="kicker">1. Задача</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#1. Задача">Задача</h2>
+<ul><li>Построить многомерную карту позиций менеджмента, продлить её до 2050 года и найти на ней целевые клетки (задание Орлова: <code>hod-raboty.md</code>, «Задача»; «таксономия управленческих позиций 2050», пленар 19.09, в <code>ekstrapolyaciya/6-orlov-metod-kritika.md</code>, раздел 5).</li><li>Автор поставил цель выше материала: «нужна схема, адекватная в результате», то есть метод, который переносится на любой материал (<code>rassuzhdeniya-avtora.md</code>, 26.09).</li></ul>
+
+<div class="pn"><a class="pv" href="#p1">← Как читать</a><a class="nx" href="#p3">Метод →</a></div></section><section class="pgp" id="p3" data-t="Метод"><p class="kicker">2. Метод</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#2. Метод">Метод</h2>
+<p><strong>Цепочка:</strong> материал → позиции → каталог позиций → основания (стороны таблицы) → матрица и срез → фазы циклов → прогноз по фазам → носитель.</p>
+<details class="fold" open><summary>Таблица<span class="cnt">8 строк</span></summary>
+<div class="tw"><table><thead><tr><th>Шаг</th><th>Что делается</th><th>Откуда</th></tr></thead><tbody><tr><td>Материал</td><td>Выборка по формуле Орлова: аномальный результат или выживание, потом успех. Четыре выборки: 92 организации за 2500 лет, 48 креаторов, 48 программ подготовки управленцев (1551–2026), 26 финтех-компаний (2001–2026)</td><td><code>vyborki/SPEC.md</code>, раздел 2–3</td></tr><tr><td>Позиции</td><td>Каждая единица раскладывается на позиции по цепочке «у кого беру — что делаю — кому передаю», с продуктом, классом работы и горизонтом решения</td><td><code>hronika-raboty.md</code>, 27.09</td></tr><tr><td>Каталог</td><td>Одинаковую работу разных мест сводят в одну позицию по продукту, раздельно по классам работы; разные продукты не сливают</td><td><code>hronika-raboty.md</code>, 27.09 и ночь 28.09</td></tr><tr><td>Основания</td><td>Любой список, который встаёт стороной таблицы и даёт позиции на пересечениях. Любая пара раскладывает весь материал заново</td><td><code>rassuzhdeniya-avtora.md</code>, 26.09</td></tr><tr><td>Матрица и срез</td><td>Строки, столбцы и третье основание — срез, слои переключаются вкладками</td><td><code>hod-raboty.md</code>, ночь 28.09</td></tr><tr><td>Фазы</td><td>Время размечено фазами циклических оптик; фаза позиции — по году, когда сложилась управленческая форма её организации</td><td><code>hod-raboty.md</code>, 27.09</td></tr><tr><td>Прогноз</td><td>Пятилетки 2026–2050 заполняются позициями, у которых сошлись две линии: прецедент той же фазы (не меньше двух организаций) и запрос фазы к роду работы позиции</td><td><code>hod-raboty.md</code>, «Как работает прогноз» и 28.09</td></tr><tr><td>Носитель</td><td>Человек, команда, машина. Это фильтр по результату прогноза, клетки по нему не заполняют</td><td><code>rassuzhdeniya-avtora.md</code>, 27.09</td></tr></tbody></table></div>
+</details>
+<p>Описание позиций (по СМД, по языку человеко-машинных систем и т. п.) идёт после таблицы, «но не раньше» (<code>rassuzhdeniya-avtora.md</code>, «О методе целиком»).</p>
+
+<div class="pn"><a class="pv" href="#p2">← Задача</a><a class="nx" href="#p4">Принципы →</a></div></section><section class="pgp" id="p4" data-t="Принципы"><p class="kicker">3. Принципы</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#3. Принципы">Принципы</h2>
+<details class="fold" open><summary>Список<span class="cnt">12 пунктов</span></summary>
+<ol><li><strong>Основание — сторона таблицы.</strong> Фильтр прячет записи в старых клетках, сторона раскладывает весь материал заново (<code>rassuzhdeniya-avtora.md</code>, 26.09).</li><li><strong>Критерий основания операционный.</strong> Годится список, который встаёт стороной и даёт позиции; объект это, свойство или время, для построения неважно. Значения одного списка одного рода и не пересекаются (<code>hronika-raboty.md</code>, 26.09).</li><li><strong>Сначала позиции, потом матрица.</strong> Единица — позиция внутри организации: «не могут 88 организаций за 2500 лет содержать 20 позиций» (<code>rassuzhdeniya-avtora.md</code>, 27.09).</li><li><strong>СРТ (система разделения труда) растёт расщеплением позиций.</strong> Крупная позиция делится по дополнительной оси, как маркетолог XX века на сотню позиций; то же у Орлова (<code>rassuzhdeniya-avtora.md</code>, 27.09; <code>ekstrapolyaciya/6-orlov-metod-kritika.md</code>, раздел 5).</li><li><strong>Пустая клетка не дефект.</strong> Таблицу оценивают по неожиданным пустотам и совпадениям, заполненность в оценку не входит. Пустоты бывают по логике и по выборке (<code>rassuzhdeniya-avtora.md</code>, 26.09; <code>svod/3-osnovaniya.md</code>, 3.4).</li><li><strong>Выборка — решение заказчика.</strong> Мерило схемы — ложится ли она на материал (<code>rassuzhdeniya-avtora.md</code>, 27.09).</li><li><strong>Время — фазы циклов.</strong> У фазы есть прошлые аналоги, у календарной даты 2040 их нет. Каждая оптика — своя сторона и свой прогноз (<code>rassuzhdeniya-avtora.md</code>, 26.09).</li><li><strong>Прогноз делает матрица.</strong> Дело аналитика — подобрать оптики и основания; ячейки до 2050 года заполняет правило (<code>rassuzhdeniya-avtora.md</code>, 27.09).</li><li><strong>Носитель — после.</strong> Сначала какая работа, потом кто её сделает (<code>rassuzhdeniya-avtora.md</code>, 27.09).</li><li><strong>Источники — через проверку.</strong> У Орлова и других авторов берётся сказанное прямо или проверяемое, с разбором ошибок и допущений (<code>rassuzhdeniya-avtora.md</code>, 27.09).</li><li><strong>Управление — в широком смысле.</strong> Мандат описывает позицию (основание «легитимность»), но не решает, управление ли это (<code>svod/2-poziciya-i-styk.md</code>, 2.1).</li><li><strong>Прецедент считается только со своей стороны сделки.</strong> Соседняя позиция с другой стороной даёт чужой прогноз (<code>hronika-raboty.md</code>, поздняя ночь 28.09).</li></ol>
+</details>
+
+<div class="pn"><a class="pv" href="#p3">← Метод</a><a class="nx" href="#p5">Конструкция куба →</a></div></section><section class="pgp" id="p5" data-t="Конструкция куба"><p class="kicker">4. Конструкция куба</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#4. Конструкция куба">Конструкция куба</h2>
+<details class="fold" open><summary>Таблица<span class="cnt">9 строк</span></summary>
+<div class="tw"><table><thead><tr><th>Слой</th><th>Содержание</th><th>Вопрос</th></tr></thead><tbody><tr><td>Материал</td><td>Четыре выборки, 1588 записей позиций</td><td>На чём проверяем схему?</td></tr><tr><td>Позиция</td><td>Цепочка «у кого беру — что делаю — кому передаю», продукт, род работы, горизонт решения</td><td>Какая это работа?</td></tr><tr><td>Каталог</td><td>872 позиции</td><td>Одна ли это работа в разных местах и эпохах?</td></tr><tr><td>Основание</td><td>27 сторон в пяти группах: чем управляют, когда, в каких условиях, кто, как видит мир</td><td>По какому признаку раскладываем?</td></tr><tr><td>Порядок основания</td><td>Шкала (есть «вверх») или список (годится только в срез)</td><td>Где верх таблицы и какая клетка должна пустовать?</td></tr><tr><td>Оптика времени</td><td>19 календарей фаз: циклы Кондратьева, Перес, Арриги и др., волны СРТ, короткие циклы</td><td>В какой фазе стоит позиция?</td></tr><tr><td>Прогноз</td><td>Столбцы 2026–2050 в той же сетке</td><td>Какие позиции поддержаны прецедентами той же фазы в 2026–2050?</td></tr><tr><td>Стык</td><td>Ребро «у кого беру → кому передаю»</td><td>Где продукт одной позиции становится входом другой?</td></tr><tr><td>Носитель</td><td>Человек, команда, человеко-машинная система</td><td>Кто займёт позицию?</td></tr></tbody></table></div>
+</details>
+<p>Роды работы в каталоге взяты из справочника квалификации Management2050: К1 организация исполнения, К2 организация системы деятельности, К3 организация кооперации, К4 учреждение и изменение институтов, К5 воспроизводство и развитие способности, К6 формирование и пересмотр оснований, К7 организация познания и коллективного мышления (<code>hronika-raboty.md</code>, 27.09).</p>
+
+<div class="pn"><a class="pv" href="#p4">← Принципы</a><a class="nx" href="#p6">5.1. Позиции и каталог →</a></div></section><section class="pgp" id="p6" data-t="5.1. Позиции и каталог"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.1. Позиции и каталог">5.1. Позиции и каталог</h2>
+<div class="tw"><table><thead><tr><th>Результат</th><th>Число</th><th>Источник</th></tr></thead><tbody><tr><td>92 организации разложены на позиции</td><td>839 позиций в организациях</td><td><code>hod-raboty.md</code>, 27.09</td></tr><tr><td>Позиции, встреченные в двух и более организациях</td><td>297</td><td><code>hod-raboty.md</code>, ночь 28.09</td></tr><tr><td>Позиции, подтверждённые двумя и более выборками</td><td>110, из них 83 общие с каталогом 92 организаций</td><td>там же</td></tr></tbody></table></div>
+<ul><li>110 позиций — первые, которые подтвердил разнородный материал: каждая встречается больше чем в одной выборке (<code>hronika-raboty.md</code>, ночь 28.09).</li></ul>
+
+<div class="pn"><a class="pv" href="#p5">← Конструкция куба</a><a class="nx" href="#p7">5.2. Сквозные и новые позиции →</a></div></section><section class="pgp" id="p7" data-t="5.2. Сквозные и новые позиции"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.2. Сквозные и новые позиции">5.2. Сквозные и новые позиции</h2>
+<ul><li>«Переговорщик с иностранными державами» и «школа административно-политических кадров» есть во всех шести исторических эпохах, «сборщик податей» — в пяти, у 16 организаций (<code>hronika-raboty.md</code>, 27.09).</li><li>Только в последней эпохе: «привлекатель внешнего финансирования» (9 организаций), «распределитель капитала на рост», «формирователь публичного образа» (там же).</li><li>В матрице это стало стороной «давность работы»: вне времени (4 эпохи и больше), новая (только с 1945 года, у двух организаций и больше), остальные (<code>hod-raboty.md</code>, ночь 28.09).</li></ul>
+
+<div class="pn"><a class="pv" href="#p6">← 5.1. Позиции и каталог</a><a class="nx" href="#p8">5.3. Граф передач →</a></div></section><section class="pgp" id="p8" data-t="5.3. Граф передач"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.3. Граф передач">5.3. Граф передач</h2>
+<ul><li>466 связей «у кого беру → кому передаю» на уровне каталога, 436 из них внутри одной организации (<code>hod-raboty.md</code>, ночь 28.09; <code>sborka/chain-edges.json</code>).</li><li>Граф показывает соседство работ внутри организации. Как люди переходят между позициями, по нему не видно (<code>svod/2-poziciya-i-styk.md</code>, 2.3).</li></ul>
+
+<div class="pn"><a class="pv" href="#p7">← 5.2. Сквозные и новые позиции</a><a class="nx" href="#p9">5.4. Основания: шкалы и списки →</a></div></section><section class="pgp" id="p9" data-t="5.4. Основания: шкалы и списки"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.4. Основания: шкалы и списки">5.4. Основания: шкалы и списки</h2>
+<ul><li>Из 28 оснований v2 настоящих шкал пять: горизонт решения, длительность жизни носителя, масштаб, уровень целого, формализация. 16-этажка упорядочена частично: функция → пересборка → создание. Остальные — списки, последовательности и циклы; они годятся в срез (<code>svod/3-osnovaniya.md</code>, 3.2).</li><li>Род работы — не лестница. Средний горизонт решения: К1 организация исполнения 4,2; К4 учреждение и изменение институтов 6,7; К6 формирование и пересмотр оснований 6,2; К7 организация познания 5,2 — на уровне К2 организации системы деятельности и К3 организации кооперации (5,4 и 5,1). По данным «вверх» задаёт горизонт решения (<code>svod/3-osnovaniya.md</code>, 3.3; 839 позиций).</li></ul>
+
+<div class="pn"><a class="pv" href="#p8">← 5.3. Граф передач</a><a class="nx" href="#p10">5.5. Пустоты: по логике и по выборке →</a></div></section><section class="pgp" id="p10" data-t="5.5. Пустоты: по логике и по выборке"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.5. Пустоты: по логике и по выборке">5.5. Пустоты: по логике и по выборке</h2>
+<ul><li>«Учреждение и изменение институтов» на горизонте сутки–неделя — 0 позиций, «организация исполнения» на горизонте больше 150 лет — 0. Это пусто по логике (<code>svod/3-osnovaniya.md</code>, 3.4).</li><li>«Организация познания» на горизонте сутки–неделя — 13 позиций, и это не противоречие: разведчики-информаторы Медичи и Фуггеров, рецензент изменений Linux, ежедневные разборы Pixar (там же).</li><li>166 из 214 единиц материала стоят на ступени «создание» 16-этажки. Это след отбора по аномальному результату, поэтому пустоты в «функции» и «пересборке» — по выборке (там же).</li></ul>
+
+<div class="pn"><a class="pv" href="#p9">← 5.4. Основания: шкалы и списки</a><a class="nx" href="#p11">5.6. Технология мышления →</a></div></section><section class="pgp" id="p11" data-t="5.6. Технология мышления"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.6. Технология мышления">5.6. Технология мышления</h2>
+<p>Основание взято у П. Г. Щедровицкого: конструирование, проектирование, исследование, программирование и «без технологии мышления». По Щедровицкому у каждой технологии своя промышленная революция: конструирование — нулевая (1550–1700), проектирование — первая (1700–1850), исследование — вторая (1850–2000), программирование — третья (с 2000). Разметка вслепую, без организации и года: сейчас 1531 позиция, 565 спорных (<code>sborka/tm-pos.json</code>).</p>
+<div class="tw"><table><thead><tr><th>Технология мышления</th><th>Своя волна</th><th>Где пик (доля в волне к средней)</th><th>Совпадает</th></tr></thead><tbody><tr><td>Программирование</td><td>третья, с 2000</td><td>третья, ×2,2</td><td>да</td></tr><tr><td>Конструирование</td><td>нулевая, 1550–1700</td><td>первая, ×2,0</td><td>нет, на волну позже</td></tr><tr><td>Проектирование</td><td>первая, 1700–1850</td><td>вторая, ×1,7</td><td>нет, на волну позже</td></tr><tr><td>Исследование</td><td>вторая, 1850–2000</td><td>первая, ×1,5</td><td>нет, на волну раньше</td></tr></tbody></table></div>
+<ul><li>Пики стоят в тех же волнах во всех шести вариантах счёта: все выборки или только 92 организации, со спорными метками и без.</li><li>Доля позиций «без технологии мышления» падает с 88% до 1550 года до 62% во второй промышленной революции.</li><li><span class="badge">оценка</span> Материал подтверждает рост технологий мышления после 1550 года и пик программирования, но не порядок «конструирование → проектирование → исследование». Пик программирования держится слабо: после 2000 года почти весь материал — финтех, у 92 организаций в этой волне 10 позиций с программированием.</li></ul>
+
+<div class="pn"><a class="pv" href="#p10">← 5.5. Пустоты: по логике и по выборке</a><a class="nx" href="#p12">5.7. Прогноз по фазам →</a></div></section><section class="pgp" id="p12" data-t="5.7. Прогноз по фазам"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.7. Прогноз по фазам">5.7. Прогноз по фазам</h2>
+<ul><li>2026–2030 — сильная гипотеза: пять из шести циклических оптик дают фазу слома и перестройки порядка; их признаки требуют К4 учреждения и изменения институтов и К3 организации кооперации (<code>ekstrapolyaciya/1-cikly.md</code>, сводная таблица).</li><li>2031–2040 — развилка: Штраус–Хау дают подъём, Турчин, Арриги и Перес в основной разметке — продолжение распада. Какая ветка сбудется, покажут признаки фаз; по датам этого не узнать (там же).</li><li>Оптики СРТ сходятся на К3 кооперации, К4 институтах и К7 организации познания. Реже всего нужен К2 организация системы деятельности: он главный в прошлых фазах масштабирования (<code>ekstrapolyaciya/5-srt.md</code>, раздел 5).</li><li>Большинство оптик во всех пятилетках сходится на позициях, добывающих ресурс извне: «закупщик сырья и материалов», «добытчик финансирования у патрона» (<code>hronika-raboty.md</code>, 27.09).</li><li>Короткие циклы и факторы дают границы пятилеток 2030/31, 2035/36, 2045/46 (<code>hod-raboty.md</code>, 27.09; <code>ekstrapolyaciya/7-melkie-cikly.md</code>).</li><li>У фаз без прошлых аналогов (третье разъединение Болдуина, машинизация мышления) клетки пусты: прецедентов нет (<code>hronika-raboty.md</code>, 27.09).</li></ul>
+
+<div class="pn"><a class="pv" href="#p11">← 5.6. Технология мышления</a><a class="nx" href="#p13">5.8. Слабое место прогноза →</a></div></section><section class="pgp" id="p13" data-t="5.8. Слабое место прогноза"><p class="kicker">5. Что показал материал</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#5.8. Слабое место прогноза">5.8. Слабое место прогноза</h2>
+<ul><li>Прогноз берёт только позиции, которые уже есть в материале, и нового не предсказывает (<code>hronika-raboty.md</code>, 28.09, проверка <code>logic.js</code>).</li><li>Прогноз задним числом от 1900, 1950, 1975 и 2000 года угадывает 5,3% позиций, появившихся за следующие 25 лет. Правило «будет то же, что было» угадывает 8,9%. С перемешанными календарями фаз попаданий столько же, сколько с настоящими: фазы циклов точности не добавляют. 58–69% позиций следующих 25 лет — новые (<code>verifikaciya/C-prognoz/otchet-C.md</code>).</li><li>На позициях внешнего исполнителя (консультант, подрядчик) прогноз молчит: их прецеденты почти всегда одиночные. Материал собран изнутри организаций, и не хватает основания «положение относительно организации / сторона сделки» (<code>hod-raboty.md</code>, поздняя ночь 28.09).</li></ul>
+
+<div class="pn"><a class="pv" href="#p12">← 5.7. Прогноз по фазам</a><a class="nx" href="#p14">Главный результат →</a></div></section><section class="pgp" id="p14" data-t="Главный результат"><p class="kicker">6. Главный результат</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#6. Главный результат [оценка]">Главный результат <span class="badge">оценка</span></h2>
+<p>Схема ложится на разнородный материал: 92 организации, креаторы, программы подготовки и финтех свелись в один каталог из 872 позиций, и 110 из них подтверждены больше чем одной выборкой. Единица «позиция» переносится на новый материал без подгонки.</p>
+<p>Прогноз по фазам циклов на материале не работает: он угадывает хуже, чем «будет то же, что было», и фазы точности не добавляют. Нового он не показывает. Новое видно только в пустотах на упорядоченных осях, где пустота не объясняется ни логикой, ни отбором материала.</p>
+<p>Отсюда рабочая формула куба:</p>
+<p class="chain">материал → позиция → каталог → основание (шкала или срез) → фаза → прецедент → пустота с меткой → носитель</p>
+<p>Спрос фаз на институты, кооперацию и познание и падение спроса на классическую организацию системы деятельности следуют из логики оптик. Материалом это не подтверждено: связь рода работы с фазой в данных не видна.</p>
+
+<div class="pn"><a class="pv" href="#p13">← 5.8. Слабое место прогноза</a><a class="nx" href="#p15">Чего не хватает и следующий цикл →</a></div></section><section class="pgp" id="p15" data-t="Чего не хватает и следующий цикл"><p class="kicker">7. Чего не хватает и следующий цикл</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#7. Чего не хватает и следующий цикл">Чего не хватает и следующий цикл</h2>
+<details class="fold" open><summary>Не хватает<span class="cnt">9 пунктов</span></summary>
+<ol><li><strong>Основание «положение относительно организации / сторона сделки».</strong> Без него прогноз молчит о внешних исполнителях (<code>hod-raboty.md</code>, поздняя ночь 28.09).</li><li><strong>Метки пустот</strong> «противоречие / пусто по выборке / запрос есть, позиции нет» на упорядоченных парах предложены, но не встроены (<code>svod/3-osnovaniya.md</code>, 3.4).</li><li><strong>Данные о носителе.</strong> Фильтр «носитель» не сделан. Готовый способ есть у Лены: доля операций у машины по пятилеткам (<code>sravnenie-s-lenoy/sravnenie.html</code>, раздел 8, п. 6).</li><li><strong>Стык.</strong> Четыре знания на рёбрах графа передач не размечены (<code>svod/2-poziciya-i-styk.md</code>, 2.3).</li><li><strong>Поля позиции:</strong> шапка «как называлась тогда / по сути / как сегодня / в какой СРТ», «чья цель двигает объект» (там же, 2.2).</li><li><strong>Разбор позиций</strong> по вопросам шаблона и квалификации есть только у ранних 33 позиций, у 872 каталожных его нет (<code>hod-raboty.md</code>, 27–28.09).</li><li><strong>Надёжность разметки:</strong> 304 из 839 горизонтов, 565 из 1531 технологий мышления спорные; статус «действует / распалась» ставился по общим знаниям (<code>hod-raboty.md</code>).</li><li><strong>Время:</strong> признаки фаз у цикла Орлова не названы; режим (обратимый) не отделён от фазы; нет отдельной дорожки для России (<code>ekstrapolyaciya/2-dokumenty-gruppy.md</code>, раздел 7; <code>sravnenie-s-lenoy/sravnenie.html</code>, раздел 8, п. 7).</li><li><strong>16-этажка смешивает разные виды нового;</strong> для прогноза по участкам нужно отдельное основание-список «участок» (<code>svod/3-osnovaniya.md</code>, 3.5).</li></ol>
+</details>
+<p><strong>Следующий цикл.</strong></p>
+<p class="chain">основание «сторона сделки» → пересчёт прогноза на 872 позициях → метки пустот на шкалах → носитель по доле операций → стык на рёбрах графа</p>
+
+<div class="pn"><a class="pv" href="#p14">← Главный результат</a><a class="nx" href="#p16">Источники →</a></div></section><section class="pgp" id="p16" data-t="Источники"><p class="kicker">8. Источники</p><h2 class="ph" data-sh="sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md#8. Источники">Источники</h2>
+<p><strong>Рабочие записи.</strong></p>
+<ul><li><code>rassuzhdeniya-avtora.md</code> — принципы метода словами автора, «Линия рассуждений».</li><li><code>hod-raboty.md</code> — трекер: каталог, граф, технология мышления, прогноз, открытые пункты.</li><li><code>hronika-raboty.md</code> — ход мысли по дням, «Принципы метода на 27 сентября».</li></ul>
+<p><strong>Свод.</strong></p>
+<ul><li><code>svod/README.md</code>, <code>svod/2-poziciya-i-styk.md</code>, <code>svod/3-osnovaniya.md</code> — управление, позиция, стык; шкалы и списки; пустоты.</li></ul>
+<p><strong>Время и прогноз.</strong></p>
+<ul><li><code>ekstrapolyaciya/1-cikly.md</code> — циклические оптики и календари фаз.</li><li><code>ekstrapolyaciya/2-dokumenty-gruppy.md</code> — будущее в словах Орлова и работах команд, пробелы.</li><li><code>ekstrapolyaciya/5-srt.md</code> — механизм изменения СРТ, оптики СРТ.</li><li><code>ekstrapolyaciya/6-orlov-metod-kritika.md</code> — метод Орлова и его проверка.</li><li><code>ekstrapolyaciya/7-melkie-cikly.md</code> — короткие циклы и факторы.</li></ul>
+<p><strong>Материал и основания.</strong></p>
+<ul><li><code>vyborki/SPEC.md</code>, <code>vyborki/PLAN.md</code> — выборки и правило отбора.</li><li><code>vyborki/mece/pravila-v2.md</code>, <code>bases-v2.json</code>, <code>priemka-v2.md</code> — основания v2.</li><li><code>sborka/catalog-all.json</code>, <code>sborka/chain-edges.json</code> — каталог и граф.</li></ul>
+<p><strong>Сравнения.</strong></p>
+<ul><li><code>sravnenie-s-lenoy/sravnenie.html</code> — что взято у Лены.</li><li><code>sravnenie-s-kollegoy/2026-09-29-srt2050/SRT_2050_объединенное_исследование.html</code> — документ коллеги «СРТ-2050», образец формы.</li></ul>
+<p><strong>Инструмент.</strong> <code>matrica-osnovaniy.html</code>.</p>
+
+<div class="pn"><a class="pv" href="#p15">← Чего не хватает и следующий цикл</a></div></section>
+</div></main></div>
+<script>
+(function(){
+ var panels=[].slice.call(document.querySelectorAll('section.pgp'));
+ var links=[].slice.call(document.querySelectorAll('aside a.nl'));
+ function show(hash){
+  var id=(hash||'').replace('#','');
+  var p=document.getElementById(id);
+  if(!p||!p.classList.contains('pgp'))p=panels[0];
+  panels.forEach(function(x){x.classList.toggle('on',x===p)});
+  links.forEach(function(a){var on=a.getAttribute('data-p')===p.id;a.classList.toggle('on',on);if(on){a.closest('.ch').classList.add('open')}});
+  window.scrollTo(0,0);
+  document.body.classList.remove('navopen');
+  document.title=p.getAttribute('data-t')+' — Куб позиций';
+  try{localStorage.setItem('kub_svod_last',p.id)}catch(e){}
+ }
+ window.addEventListener('hashchange',function(){show(location.hash)});
+ document.addEventListener('click',function(e){
+  var a=e.target.closest?e.target.closest('a[href^="#"]'):null; if(!a)return;
+  e.preventDefault(); var h=a.getAttribute('href'); show(h);
+  try{history.replaceState(null,'',h)}catch(err){}
+ });
+ [].forEach.call(document.querySelectorAll('aside .cht'),function(b){b.addEventListener('click',function(){b.parentNode.classList.toggle('open')})});
+ document.querySelector('.menu').addEventListener('click',function(){document.body.classList.toggle('navopen')});
+ document.querySelector('.scrim').addEventListener('click',function(){document.body.classList.remove('navopen')});
+ var start=location.hash;
+ if(!start){try{var l=localStorage.getItem('kub_svod_last');if(l)start='#'+l}catch(e){}}
+ try{history.scrollRestoration='manual'}catch(e){}
+ show(start);
+ function top(){window.scrollTo(0,0)}
+ setTimeout(top,0);
+ window.addEventListener('load',function(){setTimeout(top,0)});
+})();
+</script>
+</body></html>

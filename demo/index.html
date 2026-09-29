@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Куб позиций</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef0f4; --card:#ffffff; --line:#dde1e8; --ink:#1b2440; --muted:#6b7285;
+  --bord:#8e3b57; --teal:#2f7d74; --ochre:#a8812f; --indigo:#4d559e; --slate:#7d8499;
+  --chip:#f6f7f9;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:0 32px}
+header.top{background:var(--card);border-bottom:1px solid var(--line)}
+.head{padding:22px 0 0}
+.over{font-size:13px;color:var(--muted);letter-spacing:.02em}
+h1{font-size:26px;line-height:1.2;margin:4px 0 6px;font-weight:700}
+.lead{margin:0 0 14px;color:var(--muted);max-width:760px}
+nav.tabs{display:flex;gap:4px;overflow:visible;flex-wrap:wrap}
+nav.tabs button{font:inherit;font-size:17px;background:none;border:0;border-bottom:3px solid transparent;padding:12px 16px 12px;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.tabs button .n{color:#9aa0b0;margin-right:6px}
+nav.tabs button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
+nav.tabs button.on .n{color:var(--ink)}
+nav.tabs button:hover{color:var(--ink)}
+main{padding:26px 0 40px}
+.grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px}
+.scheme{padding:12px}
+.scheme svg{display:block;width:100%;height:auto}
+.hint{font-size:13px;color:var(--muted);padding:0 8px 4px}
+.side{display:flex;flex-direction:column;gap:20px;min-width:0}
+.lens{padding:22px 26px}
+.lens .lbl{color:var(--muted);font-size:17px;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font:inherit;font-size:15px;border:1px solid #cfd4dd;background:var(--card);color:var(--ink);border-radius:999px;padding:7px 15px;cursor:pointer;text-align:left}
+.chips button:hover{border-color:var(--ink)}
+.chips button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chips button .d{opacity:.6;margin-right:6px;font-size:13px}
+.explain{padding:24px 26px 26px}
+.explain h2{font-size:24px;line-height:1.2;margin:0 0 14px;font-weight:700}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 16px}
+.chain span.p{border:1px solid #cfd4dd;border-radius:4px;padding:5px 11px;font-size:15px;font-weight:500;background:#fff}
+.chain span.p.cur{border-color:var(--ink);background:var(--ink);color:#fff}
+.chain span.ar{color:var(--muted)}
+.rows{margin:0;padding:0}
+.rows .r{margin:0 0 12px}
+.rows .k{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:2px}
+.rows .v{margin:0}
+.explain p{margin:0 0 10px}
+.explain ul{margin:0 0 12px;padding-left:18px}
+.explain li{margin:0 0 6px}
+.est{background:#f4f1ea;border-left:3px solid var(--ochre);padding:10px 12px;border-radius:0 6px 6px 0;margin:4px 0 12px}
+.badge{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#fff;background:var(--ochre);border-radius:3px;padding:1px 6px;margin-right:6px;vertical-align:1px}
+.badge.open{background:var(--bord)}
+.badge.done{background:var(--teal)}
+.quote{color:#3b4360;font-style:italic}
+.src{color:var(--muted);font-size:14px;margin-top:14px}
+footer{color:var(--muted);font-size:13px;padding:0 0 30px}
+svg text{font-family:"Onest",system-ui,sans-serif}
+svg .hit{cursor:pointer}
+@media (max-width:900px){
+  .wrap{padding:0 16px}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  h1{font-size:22px}
+  nav.tabs{gap:0}
+  nav.tabs button{font-size:15px;padding:9px 10px}
+  .lens,.explain{padding:18px 16px}
+  .explain h2{font-size:21px}
+  .scheme{padding:6px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap head">
+    <div class="over">Онтоклуб · многоходовочка · 23–29 сентября 2026</div>
+    <h1>Куб позиций: как он складывался</h1>
+    <p class="lead">Путь от одной таблицы до метода, проверенного на четырёх выборках. На каждой вкладке одна схема: нажмите узел или чип справа.</p>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+<main class="wrap">
+  <div class="grid">
+    <section class="card scheme"><svg id="svg" viewBox="0 0 800 800" role="img" aria-label="Схема"></svg><div class="hint" id="hint"></div></section>
+    <aside class="side">
+      <div class="card lens"><div class="lbl" id="lensLbl"></div><div class="chips" id="chips"></div></div>
+      <div class="card explain" id="explain"></div>
+    </aside>
+  </div>
+</main>
+<footer class="wrap">Источники: hod-raboty.md, hronika-raboty.md, rassuzhdeniya-avtora.md, sravnenie-s-kollegoy/2026-09-29-srt2050/vyvody-kuba.md и три проверки 29.09 в той же папке. Пометка «оценка» — обобщение, а не счёт.</footer>
+
+<script>
+(function(){
+"use strict";
+const COL={ink:'#1b2440',bord:'#8e3b57',teal:'#2f7d74',ochre:'#a8812f',indigo:'#4d559e',slate:'#7d8499',line:'#c9ced8',muted:'#6b7285',pale:'#e6e9ef'};
+const NS='http://www.w3.org/2000/svg';
+const PI=Math.PI;
+let K=1, uid=0;
+function S(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function wrap(t,n){const w=String(t).split(' ');const L=[];let cur='';for(const x of w){if(!cur)cur=x;else if((cur+' '+x).length<=n)cur+=' '+x;else{L.push(cur);cur=x;}}if(cur)L.push(cur);return L;}
+function txt(p,x,y,lines,o){o=o||{};const fs=o.fs||13;const lh=o.lh||fs*1.22;
+  const t=S('text',{x:x,y:y,'font-size':fs,'text-anchor':o.anchor||'middle',fill:o.fill||COL.ink,'font-weight':o.fw||500},p);
+  let y0=y; const n=lines.length;
+  if(o.valign==='middle')y0=y-(n-1)*lh/2+fs*0.35;else if(o.valign==='bottom')y0=y-(n-1)*lh;else if(o.valign==='top')y0=y+fs*0.8;
+  lines.forEach(function(l,i){const s=S('tspan',{x:x,y:y0+i*lh},t);s.textContent=l;});
+  if(o.cls)t.setAttribute('class',o.cls);
+  return t;}
+function hexA(hex,a){const h=hex.replace('#','');const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ---------- радиальная схема ---------- */
+function radial(svg,cfg,sel,onPick){
+  const C=400,n=cfg.nodes.length,R=cfg.R||222,nr=cfg.nr||37,AR=cfg.AR||356,hubR=cfg.hubR||76;
+  const ang=function(i){return -90+i*360/n;};
+  const P=function(r,a){return [C+r*Math.cos(a*PI/180),C+r*Math.sin(a*PI/180)];};
+  const arcD=function(r,a0,a1,rev){const lg=(a1-a0)>180?1:0;const p0=P(r,a0),p1=P(r,a1);
+    return rev?('M'+p1[0]+' '+p1[1]+' A'+r+' '+r+' 0 '+lg+' 0 '+p0[0]+' '+p0[1]):('M'+p0[0]+' '+p0[1]+' A'+r+' '+r+' 0 '+lg+' 1 '+p1[0]+' '+p1[1]);};
+  const defs=S('defs',{},svg);
+  const mk=S('marker',{id:'arH',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);
+  S('path',{d:'M0,0 L10,5 L0,10 z',fill:COL.line},mk);
+  const mk2=S('marker',{id:'arD',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto-start-reverse'},defs);
+  S('path',{d:'M0,0 L10,5 L0,10 z',fill:COL.ink},mk2);
+  const hl=cfg.hl(sel);
+  // дуги групп
+  cfg.groups.forEach(function(g){
+    const idx=g.ids.map(function(id){return cfg.nodes.findIndex(function(x){return x.id===id;});});
+    const a0=ang(Math.min.apply(null,idx))-180/n+3,a1=ang(Math.max.apply(null,idx))+180/n-3;
+    S('path',{d:arcD(AR,a0,a1,false),fill:'none',stroke:g.color,'stroke-width':4,'stroke-linecap':'round',opacity:.6},svg);
+    const mid=(a0+a1)/2;const bottom=Math.sin(mid*PI/180)>0.15;const fs=13.5*K;
+    const pid='ap'+(uid++);const rr=bottom?AR+9+fs*0.78:AR+9;
+    S('path',{id:pid,d:arcD(rr,a0,a1,bottom),fill:'none'},defs);
+    const t=S('text',{'font-size':fs,fill:g.color,'font-weight':600},svg);
+    const tp=S('textPath',{href:'#'+pid,startOffset:'50%','text-anchor':'middle'},t);
+    tp.textContent=(K>1&&g.qs)?g.qs:g.q;
+  });
+  // спицы
+  cfg.nodes.forEach(function(nd,i){const a=ang(i);const p0=P(hubR+2,a),p1=P(R-nr-2,a);const on=hl.spokes.has(nd.id);
+    S('line',{x1:p0[0],y1:p0[1],x2:p1[0],y2:p1[1],stroke:on?COL.ink:COL.line,'stroke-width':on?3.2:1.2},svg);});
+  // рёбра по кольцу
+  if(cfg.ring){
+    const d=(nr+7)/R*180/PI;
+    const cnt=cfg.closing?n:n-1;
+    for(let i=0;i<cnt;i++){
+      const a0=ang(i)+d,a1=ang(i+1)-d;const on=hl.edges.has(i);const closing=(i===n-1);
+      S('path',{d:arcD(R,a0,a1,false),fill:'none',stroke:on?COL.ink:COL.line,'stroke-width':on?3.2:1.6,'stroke-dasharray':closing?'6 5':'none','marker-end':on?'url(#arD)':'url(#arH)'},svg);
+      if(cfg.edgeLabels&&cfg.edgeLabels[i]){
+        const am=(ang(i)+ang(i+1))/2;const lp=P(R-58*Math.min(K,1.2),am);
+        txt(svg,lp[0],lp[1],wrap(cfg.edgeLabels[i],Math.round(12/K)),{fs:12.5*K,fill:on?COL.ink:COL.muted,fw:on?600:500,valign:'middle'});
+      }
+    }
+  }
+  // центр
+  const hub=S('g',{class:cfg.hubPick?'hit':''},svg);
+  S('circle',{cx:C,cy:C,r:hubR,fill:COL.ink},hub);
+  txt(hub,C,C,cfg.hub,{fs:(cfg.hubFs||16)*Math.min(K,1.25),fill:'#fff',fw:600,valign:'middle'});
+  if(cfg.hubPick)hub.addEventListener('click',function(){onPick(cfg.hubPick);});
+  // узлы
+  cfg.nodes.forEach(function(nd,i){
+    const a=ang(i);const p=P(R,a);const col=nd.color;const full=hl.full.has(nd.id),tint=hl.tint.has(nd.id);
+    const g=S('g',{class:'hit'},svg);
+    const tt=S('title',{},g);tt.textContent=nd.label;
+    S('circle',{cx:p[0],cy:p[1],r:nr,fill:full?col:(tint?hexA(col,.16):'#fff'),stroke:col,'stroke-width':2.6,'stroke-dasharray':nd.dashed?'5 4':'none'},g);
+    if(nd.inner){txt(g,p[0],p[1],nd.inner,{fs:(nd.innerFs||17)*Math.min(K,nd.inner[0].length>7?1.05:1.2),fill:full?'#fff':col,fw:700,valign:'middle',lh:(nd.innerLh||15)*Math.min(K,1.2)});}
+    if(nd.label){
+      const c=Math.cos(a*PI/180),s=Math.sin(a*PI/180);
+      const side=Math.abs(c)>0.9;const kl=Math.min(K,1.3);
+      let lp=P(R+nr+9,a);
+      let anchor=c>0.35?'start':(c<-0.35?'end':'middle');
+      let va=s<-0.35?'bottom':(s>0.35?'top':'middle');
+      if(side&&K>1){lp=[p[0],p[1]+nr+8];anchor='middle';va='top';}
+      const lines=wrap(nd.label,Math.round((side&&K==1?(cfg.sideWrap||11):(cfg.wrap||13))/kl));
+      txt(g,lp[0],lp[1],lines,{fs:15*kl,anchor:anchor,valign:va,fw:full?700:500,fill:COL.ink});
+    }
+    g.addEventListener('click',function(){onPick(nd.id);});
+  });
+}
+
+/* ---------- данные вкладок ---------- */
+const DAY={d23:COL.slate,d26:COL.bord,d27:COL.teal,d28:COL.ochre,d29:COL.indigo};
+
+const STAGES=[
+ {id:'s1',d:'23.09',g:'d23',name:'Одна матрица',
+  was:'92 организации за 2500 лет. Пара «объект управления × эпоха», у каждой организации одна позиция: всего 33.',
+  noticed:'Десять новых измерений встроили фильтрами. Фильтр только прячет часть записей в старых клетках.',
+  move:'Основание становится стороной таблицы. Автор 26.09: «Это не фильтры имеющегося, это основания для ещё матриц по материалу».',
+  result:'19 оснований; любая пара раскладывает все 92 организации заново.',
+  edge:'стороны', src:'hod-raboty.md, 23.09 и 26.09'},
+ {id:'s2',d:'26.09',g:'d26',name:'Основания — стороны',
+  was:'19 оснований, 342 упорядоченные пары. В каждой паре все 92 организации разложены по клеткам. Пустая клетка — не дефект: находкой бывает неожиданная пустота.',
+  noticed:'Позиций 33 при любой паре. Таблицы перекладывают готовые подписи, новые позиции не рождаются.',
+  move:'Сначала разложить каждую организацию на позиции, потом класть позиции на матрицу.',
+  result:'92 организации дали 839 позиций; одинаковая работа сведена в каталог из 486.',
+  edge:'разложить', src:'hod-raboty.md, 26.09; hronika-raboty.md, 26–27.09'},
+ {id:'s3',d:'27.09',g:'d27',name:'Сначала позиции',
+  was:'Автор: «Не могут 88 организаций за 2500 лет содержать 20 позиций». Каждую разобрали по цепочке «у кого беру — что делаю — кому передаю».',
+  noticed:'Эпохи до 2050 года не продлить: у даты 2040 нет прошлых аналогов.',
+  move:'Время размечают фазами циклов. У фазы есть прецеденты в прошлых циклах.',
+  result:'Каждая циклическая оптика стала своей стороной таблицы и своим прогнозом.',
+  edge:'фазы', src:'hronika-raboty.md, 26–27.09'},
+ {id:'s4',d:'27.09',g:'d27',name:'Время — фазы',
+  was:'19 оптик: Кондратьев, Перес, Арриги, Штраус–Хау, Турчин, Модельски, волны СРТ, короткие циклы. Пятилетку 2026–2050 заполняют позиции, где сошлись две линии: прецедент той же фазы и запрос фазы к роду работы.',
+  noticed:'В паре 3 × 3 теперь 486 позиций, около 54 на клетку. Клетка перестаёт быть ответом.',
+  move:'Третье основание — срез. Чем мельче единица, тем больше сторон нужно.',
+  result:'Строки, столбцы и срез; слои среза переключаются вкладками.',
+  edge:'срез', src:'hod-raboty.md, 27.09; hronika-raboty.md, 28.09'},
+ {id:'s5',d:'28.09',g:'d28',name:'Срез и шкалы',
+  was:'Прогноз встроен в ту же сетку. Автор: «Матрица должна быть ОДНА… основания меняются, ячейки тоже — но логика нет». Из 28 оснований шкал пять, остальные годятся в срез.',
+  noticed:'Прогноз берёт только позиции, которые уже были в материале. Нового он не предсказывает.',
+  move:'Решение автора: не набирать прогнозы, искать механизм. Основание «технология мышления» по П. Г. Щедровицкому.',
+  result:'1167 позиций размечены вслепую, без организации и года; 420 спорных.',
+  edge:'механизм', src:'hod-raboty.md, 28.09; svod/3-osnovaniya.md'},
+ {id:'s6',d:'28.09',g:'d28',name:'Технология мышления',
+  was:'Пять значений: конструирование, проектирование, исследование, программирование, без технологии мышления. По схеме Щедровицкого у каждой технологии своя промышленная революция.',
+  noticed:'Креаторы, программы и финтех не сведены в общий каталог. «Все выборки вместе» дают мнимое разнообразие.',
+  move:'Свести все 1588 записей в один каталог по тому же правилу продукта.',
+  result:'Из 749 записей трёх выборок 131 легла в старый каталог, остальные дали 385 новых позиций.',
+  edge:'свести', src:'hod-raboty.md, 28.09'},
+ {id:'s7',d:'28.09',g:'d28',name:'Один каталог',
+  was:'871 позиция, после исправления — 872. 297 встречаются в двух организациях и больше, 110 — в двух выборках и больше.',
+  noticed:'О позициях внешнего исполнителя прогноз молчит: их прецеденты почти всегда одиночные, материал собран изнутри организаций.',
+  move:'Сверить куб с работами коллег и перепроверить его выводы на всём материале.',
+  result:'Сверка со сводом Лены (28.09) и с документом «СРТ-2050» (29.09), три проверки.',
+  edge:'сверить', src:'hod-raboty.md, ночь 28.09; vyvody-kuba.md, 5.1 и 5.8'},
+ {id:'s8',d:'29.09',g:'d29',name:'Сверка и проверки',
+  was:'«СРТ-2050» строит клетки дедукцией: оси порождают клетки. Куб — индукцией: клетку заполняет материал. Вместе они отличают «ещё не найдено» от «невозможно».',
+  noticed:'40 гипотез коллеги — 24 различные работы, у всех есть прецеденты с людьми. Цепочка объекта шкалой не держится. Вывод 28.09 о технологии мышления исправлен.',
+  move:'Следующий цикл: основание «сторона сделки», ось «граница объекта», развилка «выделится / поглотится».',
+  result:'Формула куба: материал → позиция → каталог → основание → фаза → прецедент → пустота с меткой → носитель.',
+  resultEst:true,
+  edge:'новый цикл', src:'vyvody-kuba.md, 5.10–5.12, 6, 7'}
+];
+
+const SHIFTS=[
+ {id:'h1',name:'Основание — сторона',removed:'выбор, какие записи показать фильтром',rule:'любая пара оснований раскладывает весь материал заново',q:'«Это НЕ фильтры имеющегося, это основания для ещё матриц ПО материалу»',d:'26.09'},
+ {id:'h2',name:'Критерий — ложится ли',removed:'спор, объект это или свойство',rule:'годится список, который встаёт стороной и даёт позиции; значения одного рода и не пересекаются',q:'«Сам факт просто в том, возможно ли этот список сделать стороной таблицы и увидеть на пересечении позиции»',d:'26.09'},
+ {id:'h3',name:'Мерило — схема',removed:'оценку по заполненности клеток и качеству выборки',rule:'проверять, ложится ли схема; находка — неожиданная пустота или совпадение',q:'«Выборка — решение заказчика… суть схемы — что она ложится или нет, а не количество заполненных ячеек»',d:'27.09'},
+ {id:'h4',name:'Единица — позиция',removed:'одну подпись на организацию',rule:'организация раскладывается на позиции по цепочке «у кого беру — что делаю — кому передаю»',q:'«Ну НЕ МОГУТ 88 организаций за 2500 лет содержать в себе 20 позиций»',d:'27.09'},
+ {id:'h5',name:'Время — фазы',removed:'календарную дату без прошлых аналогов',rule:'каждая циклическая оптика — своя сторона со своими фазами и своим прогнозом',q:'«Именно в этом и поиск, что КАЖДОЕ даст какие-то позиции»',d:'26.09'},
+ {id:'h6',name:'Прогноз — матрица',removed:'суждение аналитика о том, что вырастет',rule:'пятилетку заполняют прецедент той же фазы и запрос фазы к роду работы',q:'«Это НЕ ТЫ должен смотреть, это матрица должна показать»',d:'27.09'},
+ {id:'h7',name:'Источник — проверка',removed:'доверие пересказу, в том числе словам Орлова',rule:'берётся сказанное прямо или проверяемое, с разбором ошибок и допущений',q:'«Бери сюда только то, что сможешь либо восстановить и перепроверить анализом… либо конкретно сказанное»',d:'27.09'},
+ {id:'h8',name:'Носитель — после',removed:'смешение работы и её исполнителя',rule:'сначала какая работа, потом кто её сделает; носитель — фильтр по результату',q:'«Это фильтр, он после»',d:'27.09'}
+];
+
+const LAYERS=[
+ {id:'l1',name:'материал',q:'На чём проверяем схему?',g:'take',nums:['4 выборки','1588 записей'],
+  text:['92 организации за 2500 лет, 48 креаторов, 48 программ подготовки управленцев (1551–2026), 26 финтех-компаний (2001–2026).','Отбор по формуле Орлова: аномальный результат или выживание, потом успех.'],status:'done'},
+ {id:'l2',name:'позиция',q:'Какая это работа?',g:'take',nums:['у кого беру','что делаю','кому передаю'],
+  text:['Каждая единица материала раскладывается на позиции по цепочке передач.','У позиции есть продукт, род работы и горизонт решения.'],status:'done'},
+ {id:'l3',name:'каталог',q:'Одна ли это работа?',qf:'Одна ли это работа в разных местах и эпохах?',g:'take',nums:['872 позиции','110 в двух выборках+'],
+  text:['Одинаковую работу разных мест и эпох сводят в одну позицию по продукту. Разные продукты не сливают.','297 позиций встречаются в двух организациях и больше.'],status:'done'},
+ {id:'l4',name:'основание',q:'По какому признаку?',qf:'По какому признаку раскладываем материал?',g:'lay',nums:['27 сторон','5 вопросов'],
+  text:['Группы: чем управляют, когда, в каких условиях, кто, как видит мир.','Шкал пять: горизонт решения, длительность жизни носителя, масштаб, уровень целого, формализация. Они дают «вверх». Списки годятся в срез.'],status:'done'},
+ {id:'l5',name:'фаза',q:'В какой фазе?',qf:'В какой фазе цикла стоит позиция?',g:'lay',nums:['19 календарей','2026–2050'],
+  text:['Кондратьев, Перес, Арриги, Штраус–Хау, Турчин, Модельски, волны СРТ, короткие циклы.','Фаза позиции считается по году, когда сложилась управленческая форма её организации.'],status:'done'},
+ {id:'l6',name:'прецедент',q:'Что было в той же фазе?',qf:'Какие позиции поддержаны прошлыми фазами того же рода?',g:'see',nums:['та же фаза','≥ 2 организации'],
+  text:['Будущая пятилетка берёт позиции, у которых сошлись прецедент той же фазы и запрос фазы к роду работы.','Прецедент считается только со своей стороны сделки.'],status:'done'},
+ {id:'l7',name:'пустота',q:'Почему пусто?',qf:'Почему клетка пуста?',g:'see',nums:['по логике','по выборке','запрос без позиции'],
+  text:['Пример по логике: учреждение институтов на горизонте сутки–неделя — 0 позиций.','Пример по выборке: 170 из 214 единиц материала на ступени «создание» 16-этажки.'],status:'open',statusText:'метки предложены, в матрицу не встроены'},
+ {id:'l8',name:'носитель',q:'Кто займёт позицию?',g:'who',nums:['человек','команда','люди + машина'],
+  text:['Фильтр по результату прогноза: клетки по нему не заполняют.','Готовый способ есть в своде Лены: доля операций у машины по пятилеткам.'],status:'open',statusText:'фильтр не сделан, данных о носителе нет'}
+];
+
+const ERRORS=[
+ {id:'e1',d:'23.09 → 26.09',bad:'Основания встроены фильтрами поверх одной матрицы',fix:'Основание — сторона таблицы: пара раскладывает весь материал заново',
+  more:'Сходимость клеток появлялась только как побочный эффект фильтра, который прятал записи.',done:true,src:'hod-raboty.md, 26.09'},
+ {id:'e2',d:'27.09',bad:'«20 позиций на 2500 лет»: по одной подписи на организацию',fix:'92 организации разложены на 839 позиций, каталог — 486',
+  more:'До разборки позиций было 33, и любая пара оснований только перекладывала эти подписи.',done:true,src:'hronika-raboty.md, 26–27.09'},
+ {id:'e3',d:'28.09',bad:'486 позиций в паре 3 × 3: около 54 на клетку',fix:'Третье основание — срез',
+  more:'Число сторон зависит от мелкости единицы. На 92 организациях пары хватало: около 10 на клетку.',done:true,src:'hronika-raboty.md, 28.09'},
+ {id:'e4',d:'28.09',bad:'«Руководитель WeChat» в прогнозе на 2050 год',fix:'Порог: прецедент у двух организаций и больше; выборки сведены в каталог',
+  more:'У Кондратьева одна повышательная фаза на все 2020–2050 годы. Прецедент — одна компания (Яндекс.Деньги, 2002). Совпадение рода работы широкое.',done:true,src:'hod-raboty.md, 28.09'},
+ {id:'e5',d:'28.09',bad:'Учащиеся попали в позиции своих учителей',fix:'Новая позиция «учащийся программы подготовки»: каталог 871 → 872',
+  more:'Шесть учащихся программ — пансионер, кадет, стипендиат и другие — при сведении легли к тем, кто их учит. Другие отнесения не перепроверялись.',done:true,src:'hod-raboty.md, 28.09'},
+ {id:'e6',d:'28.09 → 29.09',bad:'Вывод «у каждой технологии мышления своя волна»',fix:'Пересчёт: своя волна только у программирования',
+  more:'Нумерация волн была верной, ошибка в выводе. Конструирование и проектирование дают пик на волну позже своей, исследование — на волну раньше.',done:true,src:'tm-pereschet/itog.md'},
+ {id:'e7',d:'28.09 → следующий цикл',bad:'Прогноз молчит о внешнем исполнителе',fix:'Нужно основание «положение относительно организации / сторона сделки»',
+  more:'Прецеденты консультанта и подрядчика почти всегда одиночные: материал собран изнутри организаций. Соседняя позиция с другой стороной сделки даёт чужой прогноз.',done:false,src:'hod-raboty.md, поздняя ночь 28.09; vyvody-kuba.md, 5.8'}
+];
+
+/* ---------- рендер карточек ---------- */
+function chainHTML(items,cur){return '<div class="chain">'+items.map(function(t,i){return (i?'<span class="ar">→</span>':'')+'<span class="p'+(i===cur?' cur':'')+'">'+esc(t)+'</span>';}).join('')+'</div>';}
+function rowsHTML(rows){return '<div class="rows">'+rows.map(function(r){return '<div class="r"><div class="k">'+esc(r[0])+'</div><p class="v">'+(r[2]?'<span class="badge">оценка</span>':'')+esc(r[1])+'</p></div>';}).join('')+'</div>';}
+function estHTML(t){return '<p class="est"><span class="badge">оценка</span>'+esc(t)+'</p>';}
+function srcHTML(t){return '<div class="src">Источник: '+esc(t)+'</div>';}
+function ulHTML(a){return '<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';}
+
+/* ---------- вкладки ---------- */
+const TABS=[
+ {title:'Путь',lens:'Стадия работы',
+  chips:STAGES.map(function(s){return {id:s.id,html:'<span class="d">'+s.d+'</span>'+esc(s.name)};}),
+  hint:'Кольцо — стадии по дням. Стрелка между стадиями — ход, который привёл к следующей.',
+  draw:function(svg,sel,pick){
+    const i=STAGES.findIndex(function(s){return s.id===sel;});
+    radial(svg,{
+      nodes:STAGES.map(function(s,k){return {id:s.id,label:s.name,color:DAY[s.g],inner:[String(k+1),s.d],innerFs:14.5,innerLh:17};}),
+      groups:[{ids:['s1'],color:DAY.d23,q:'23.09 · одна таблица',qs:'23.09'},{ids:['s2'],color:DAY.d26,q:'26.09 · что такое основание?',qs:'26.09'},{ids:['s3','s4'],color:DAY.d27,q:'27.09 · из чего клетка и когда она?',qs:'27.09'},{ids:['s5','s6','s7'],color:DAY.d28,q:'28.09 · держит ли сетка весь материал?',qs:'28.09'},{ids:['s8'],color:DAY.d29,q:'29.09 · выдержит ли проверку?',qs:'29.09'}],
+      ring:true,closing:true,edgeLabels:STAGES.map(function(s){return s.edge;}),
+      hub:['Куб','позиций'],hubFs:18,
+      hl:function(){const tint=new Set(),edges=new Set();for(let k=0;k<i;k++){tint.add(STAGES[k].id);edges.add(k);}return {full:new Set([sel]),tint:tint,spokes:new Set([sel]),edges:edges};}
+    },sel,pick);
+  },
+  card:function(sel){const i=STAGES.findIndex(function(s){return s.id===sel;});const s=STAGES[i];
+    const ch=[];if(i>0)ch.push(STAGES[i-1].name);ch.push(s.name);ch.push(i<STAGES.length-1?STAGES[i+1].name:'следующий цикл');
+    return '<h2>'+(i+1)+'. '+esc(s.name)+' · '+s.d+'</h2>'+chainHTML(ch,i>0?1:0)+rowsHTML([['Что было',s.was],['Что заметили',s.noticed],['Ход',s.move],['Что изменилось',s.result,s.resultEst]])+srcHTML(s.src);}
+ },
+ {title:'Развороты мысли',lens:'Что убрали из головы аналитика → что стало правилом',
+  chips:SHIFTS.map(function(s,k){return {id:s.id,html:'<span class="d">'+(k+1)+'</span>'+esc(s.name)};}).concat([{id:'all',html:'Общий ход'}]),
+  hint:'Восемь сдвигов «Линии рассуждений». Каждый заменяет вкус аналитика правилом инструмента.',
+  draw:function(svg,sel,pick){
+    const gc={a:COL.bord,b:COL.teal,c:COL.ochre,d:COL.indigo,e:COL.slate};
+    const gmap={h1:'a',h2:'a',h3:'a',h4:'b',h5:'c',h6:'c',h7:'d',h8:'e'};
+    radial(svg,{
+      nodes:SHIFTS.map(function(s,k){return {id:s.id,label:s.name,color:gc[gmap[s.id]],inner:[String(k+1)],innerFs:20};}),
+      groups:[{ids:['h1','h2','h3'],color:gc.a,q:'Как строить таблицу?'},{ids:['h4'],color:gc.b,q:'Что лежит в клетке?',qs:'Что в клетке?'},{ids:['h5','h6'],color:gc.c,q:'Как смотреть вперёд?'},{ids:['h7'],color:gc.d,q:'Чему верить?'},{ids:['h8'],color:gc.e,q:'Кто займёт работу?',qs:'Кто займёт?'}],
+      hub:['Правило','вместо','вкуса'],hubFs:15,hubPick:'all',
+      hl:function(){if(sel==='all'){const all=new Set(SHIFTS.map(function(s){return s.id;}));return {full:all,tint:new Set(),spokes:all,edges:new Set()};}return {full:new Set([sel]),tint:new Set(),spokes:new Set([sel]),edges:new Set()};}
+    },sel,pick);
+  },
+  card:function(sel){
+    if(sel==='all'){return '<h2>Общий ход</h2>'+chainHTML(['основание','позиция','фаза','прогноз','носитель'],-1)+estHTML('Каждый шаг убирает место, где результат зависел бы от вкуса того, кто строит таблицу, и ставит на это место правило инструмента.')+'<p>Продукт исследования — метод. Материал заменяем: схема должна лечь на любую выборку.</p>'+srcHTML('rassuzhdeniya-avtora.md, «Линия рассуждений (рефлексия Claude, 27.09)»');}
+    const k=SHIFTS.findIndex(function(s){return s.id===sel;});const s=SHIFTS[k];
+    return '<h2>'+(k+1)+'. '+esc(s.name)+'</h2>'+chainHTML(['убрали: '+s.removed,'правило: '+s.rule],1)+'<p class="quote">'+esc(s.q)+'</p><p style="color:var(--muted);font-size:14px">Автор, '+s.d+'</p>'+srcHTML('rassuzhdeniya-avtora.md');}
+ },
+ {title:'Устройство куба',lens:'Слой куба',
+  chips:LAYERS.map(function(l,k){return {id:l.id,html:'<span class="d">'+(k+1)+'</span>'+esc(l.name)};}),
+  hint:'Восемь слоёв по кругу. Пунктир — слой предложен, но не встроен. Последняя стрелка ведёт в следующий цикл.',
+  draw:function(svg,sel,pick){
+    const gc={take:COL.teal,lay:COL.indigo,see:COL.ochre,who:COL.bord};
+    const i=LAYERS.findIndex(function(l){return l.id===sel;});
+    radial(svg,{
+      nodes:LAYERS.map(function(l){const w=l.name.length>8;return {id:l.id,label:l.q,color:gc[l.g],inner:[l.name],innerFs:w?12.5:14,dashed:l.status==='open'};}),
+      nr:42,wrap:13,sideWrap:11,
+      groups:[{ids:['l1','l2','l3'],color:gc.take,q:'Что берём?'},{ids:['l4','l5'],color:gc.lay,q:'Как раскладываем?'},{ids:['l6','l7'],color:gc.see,q:'Что видим?'},{ids:['l8'],color:gc.who,q:'Кто займёт?'}],
+      ring:true,closing:true,edgeLabels:['','','','','','','','следующий цикл'],
+      hub:['Куб','8 слоёв'],hubFs:17,
+      hl:function(){const edges=new Set();if(i>0)edges.add(i-1);return {full:new Set([sel]),tint:new Set(),spokes:new Set([sel]),edges:edges};}
+    },sel,pick);
+  },
+  card:function(sel){const k=LAYERS.findIndex(function(l){return l.id===sel;});const l=LAYERS[k];
+    const st=l.status==='done'?'<p><span class="badge done">встроено</span></p>':'<p><span class="badge open">не встроено</span>'+esc(l.statusText)+'</p>';
+    return '<h2>'+(k+1)+'. '+esc(l.name[0].toUpperCase()+l.name.slice(1))+'</h2><p style="font-weight:600">'+esc(l.qf||l.q)+'</p>'+chainHTML(l.nums,-1)+l.text.map(function(t){return '<p>'+esc(t)+'</p>';}).join('')+st+srcHTML('vyvody-kuba.md, раздел 4; svod/3-osnovaniya.md');}
+ },
+ {title:'Что сломалось',lens:'Ошибка и поправка',
+  chips:ERRORS.map(function(e,k){return {id:e.id,html:'<span class="d">'+(k+1)+'</span>'+esc(e.bad.replace(/[«»]/g,'').split(':')[0])};}),
+  hint:'Слева — что сломалось, справа — как чинили. Пунктир — поправка ещё не сделана.',
+  draw:function(svg,sel,pick){drawErrors(svg,sel,pick);},
+  card:function(sel){const e=ERRORS.find(function(x){return x.id===sel;});
+    return '<h2>'+esc(e.bad)+'</h2>'+chainHTML([e.d,e.done?'исправлено':'открыто'],e.done?-1:1)+rowsHTML([['Как чинили',e.fix],['Подробнее',e.more]])+(e.done?'':'<p><span class="badge open">следующий цикл</span>основание ещё не размечено</p>')+srcHTML(e.src);}
+ },
+ {title:'Проверки 29.09',lens:'Проверка',
+  chips:[{id:'c1',html:'40 гипотез «СРТ-2050»'},{id:'c2',html:'Цепочка объекта'},{id:'c3',html:'Технология мышления'}],
+  hint:'',
+  draw:function(svg,sel){if(sel==='c1')drawHyp(svg);else if(sel==='c2')drawObj(svg);else drawTM(svg);},
+  card:function(sel){
+    if(sel==='c1')return '<h2>40 гипотез «СРТ-2050» на материале куба</h2>'+chainHTML(['40 гипотез','24 работы','15 · 15 · 10 · 0'],-1)+ulHTML([
+      'Той же работой считали тот же объект и тот же продукт. Совпадения слов мало.',
+      'Пять гипотез о полномочиях — одна работа: карта полномочий исполнителей.',
+      'У каждой гипотезы есть прецедент, где работу делают люди. Менеджер исключений — бригадир у андона Toyota; архитектор доверия — эскроу Alipay (2003).',
+      'Молчащий прогноз гипотезу не опровергает: у 35 из 43 молчащих прецедентов позиция встретилась в одной организации, а прогнозу нужны две.',
+      'Прогноз и гипотезы смотрят в разные стороны: 12 из топ-15 непокрытых позиций прогноза — организация кооперации.'])
+      +estHTML('Гипотезы в основном переименовывают старые работы под нового исполнителя, ИИ. Своя находка списка — развилка «выделится / поглотится / уйдёт в платформу / уйдёт в машину».')+srcHTML('proverka-40/proverka-40.md; vyvody-kuba.md, 5.11');
+    if(sel==='c2')return '<h2>Цепочка объекта: шкала или список?</h2>'+chainHTML(['вещь','…','организация','знание','сеть','…','возможные состояния'],-1)+ulHTML([
+      'Слепая разметка шестью разметчиками: 872 позиции и 1588 записей. Спорных около половины.',
+      'Корреляция «год × ступень» ρ = 0,08 (n = 1575): год объясняет меньше 1% разброса.',
+      'Средняя ступень у 92 организаций по эпохам: 4,1 → 4,3 → 3,9 → 4,0 → 4,0 → 4,5.',
+      '«Сеть» есть к 1291 году, «люди + ИИ» — к 2019-му: 700 лет между соседними ступенями.',
+      'Старые объекты не исчезают: «вещь» и «свойство» есть и в финтехе XXI века.'])
+      +estHTML('Не шкала: в вертикаль куба не годится, вертикалью остаётся горизонт решения. Держится одна ось с направлением во времени — граница объекта: внутри целого → между сторонами → множество автономных участников.')+srcHTML('shkala-obekta/shkala-obekta.md; vyvody-kuba.md, 5.12');
+    return '<h2>Технология мышления: своя волна или нет</h2>'+chainHTML(['своя волна по схеме','пик в материале'],-1)+ulHTML([
+      'Пересчёт по 1588 записям всех выборок, шесть вариантов счёта. Пики стоят на тех же местах.',
+      'Совпадает только программирование: пик в III ПР, ×2,2 к средней доле.',
+      'Конструирование (×2,0) и проектирование (×1,7) дают пик на волну позже своей, исследование (×1,5) — на волну раньше.',
+      'Доля позиций без технологии мышления: 88% до 1550 года, 62% во II ПР.'])
+      +estHTML('Рост технологий мышления после 1550 года материал подтверждает. Порядок «конструирование → проектирование → исследование» — нет. Пик программирования держится слабо: после 2000 года почти весь материал — финтех.')+srcHTML('tm-pereschet/itog.md; vyvody-kuba.md, 5.6');
+  }
+ },
+ {title:'Следствия',lens:'Что из этого следует',
+  chips:[{id:'r0',html:'Главный результат'},{id:'r1',html:'Носитель'},{id:'r2',html:'Граница объекта'},{id:'r3',html:'Выделится или поглотится'},{id:'r4',html:'Сдвиг СРТ'},{id:'nx',html:'Следующий цикл'}],
+  hint:'В центре — главный результат. Внутри — что нового в 2050 году. Внешнее кольцо — шаги следующего цикла.',
+  draw:function(svg,sel,pick){drawResult(svg,sel,pick);},
+  card:function(sel){return RES_CARDS[sel]();}
+ }
+];
+
+/* ---------- вкладка 4: ошибки ---------- */
+function drawErrors(svg,sel,pick){
+  const W=800,lx=16,lw=318,rx=466,rw=318;const fs=15.5*K,lh=fs*1.28;const wc=Math.round(33/K);
+  let y=66;
+  txt(svg,lx+6,34,['Что сломалось'],{fs:16*Math.min(K,1.3),anchor:'start',fill:COL.bord,fw:700});
+  txt(svg,rx+6,34,['Как чинили'],{fs:16*Math.min(K,1.3),anchor:'start',fill:COL.teal,fw:700});
+  ERRORS.forEach(function(e){
+    const on=e.id===sel;const L1=wrap(e.bad,wc),L2=wrap(e.fix,wc);const h=Math.max(L1.length,L2.length)*lh+24;
+    const g=S('g',{class:'hit'},svg);
+    S('rect',{x:lx,y:y,width:lw,height:h,rx:10,fill:on?COL.bord:'#fff',stroke:COL.bord,'stroke-width':1.6},g);
+    txt(g,lx+16,y+h/2,L1,{fs:fs,lh:lh,anchor:'start',valign:'middle',fill:on?'#fff':COL.ink,fw:on?600:500});
+    const fc=e.done?COL.teal:COL.ochre;
+    S('rect',{x:rx,y:y,width:rw,height:h,rx:10,fill:on?fc:'#fff',stroke:fc,'stroke-width':1.6,'stroke-dasharray':e.done?'none':'6 5'},g);
+    txt(g,rx+16,y+h/2,L2,{fs:fs,lh:lh,anchor:'start',valign:'middle',fill:on?'#fff':COL.ink,fw:on?600:500});
+    const cy=y+h/2;
+    S('path',{d:'M'+(lx+lw)+' '+cy+' C'+(lx+lw+60)+' '+cy+' '+(rx-60)+' '+cy+' '+(rx-4)+' '+cy,fill:'none',stroke:on?COL.ink:COL.line,'stroke-width':on?3.2:1.6,'stroke-dasharray':e.done?'none':'6 5'},g);
+    txt(g,(lx+lw+rx)/2,cy-9,wrap(e.d,Math.round(16/K)),{fs:11.5*K,fill:on?COL.ink:COL.muted,fw:on?700:500,valign:'bottom'});
+    g.addEventListener('click',function(){pick(e.id);});
+    y+=h+16;
+  });
+  svg.setAttribute('viewBox','0 0 '+W+' '+(y+4));
+}
+
+/* ---------- вкладка 5: проверки ---------- */
+function drawHyp(svg){
+  const V={};[4,5,7,9,10,11,14,18,21,24,27,29,30,35,36].forEach(function(n){V[n]='ok';});[1,3,6,12,15,16,19,20,23,25,26,28,32,33,34].forEach(function(n){V[n]='mute';});[2,8,13,17,22,31,37,38,39,40].forEach(function(n){V[n]='near';});
+  const VC={ok:COL.teal,mute:COL.ochre,near:COL.indigo};
+  const G=[[1],[2],[3,4],[5],[9],[8,36],[6,15],[14,16],[7,10],[12],[17,18],[19,33],[20,21,22,23,32],[24,25],[26],[27,38,39],[28],[40],[11,30],[29],[31],[34,35],[13],[37]];
+  const order=G.map(function(g,i){return {g:g,i:i,m:g.reduce(function(a,b){return a+b;},0)/g.length};}).sort(function(a,b){return a.m-b.m;});
+  const fsT=18*Math.min(K,1.3);
+  txt(svg,40,48,['40 гипотез «СРТ-2050»'],{fs:fsT,anchor:'start',fw:700});
+  const hx=function(n){return 48+(n-1)*(704/39);};const hy=100;
+  const gx=function(k){return 60+k*(680/23);};const gy=300;
+  order.forEach(function(o,k){const big=o.g.length===5;o.g.forEach(function(n){S('line',{x1:hx(n),y1:hy+8,x2:gx(k),y2:gy,stroke:big?COL.bord:COL.line,'stroke-width':big?2:1.1},svg);});});
+  for(let n=1;n<=40;n++){const c=S('circle',{cx:hx(n),cy:hy,r:7,fill:VC[V[n]]},svg);const t=S('title',{},c);t.textContent='Гипотеза № '+n;}
+  order.forEach(function(o,k){const big=o.g.length===5;S('circle',{cx:gx(k),cy:gy,r:5+o.g.length*2.6,fill:big?COL.bord:COL.ink},svg);});
+  txt(svg,40,gy+62,['24 различные работы'],{fs:fsT,anchor:'start',fw:700});
+  const kb=order.findIndex(function(o){return o.g.length===5;});
+  txt(svg,gx(kb),gy+44,['карта полномочий: 5 гипотез'],{fs:14.5*Math.min(K,1.3),fill:COL.bord,fw:600});
+  // вердикты
+  let y=gy+130;
+  txt(svg,40,y-24,['Вердикт по каждой из 40'],{fs:fsT,anchor:'start',fw:700});
+  const sc=700/40;
+  [['ok',15,'подтверждена: точный прецедент и прогноз'],['mute',15,'прецедент есть, прогноз молчит'],['near',10,'только близкие прецеденты'],['none',0,'без свидетельств']].forEach(function(r){
+    txt(svg,40,y+2,[r[1]+' · '+r[2]],{fs:15.5*Math.min(K,1.3),anchor:'start',fill:COL.ink,valign:'bottom'});
+    if(r[1]>0)S('rect',{x:40,y:y+8,width:r[1]*sc,height:24,rx:3,fill:VC[r[0]]},svg);else S('rect',{x:40,y:y+8,width:3,height:24,fill:COL.bord},svg);
+    y+=38+18*K+10;
+  });
+  // выделится / поглотится
+  y+=18;
+  txt(svg,40,y,['Кто держит работу, 71 точный случай'],{fs:fsT,anchor:'start',fw:700,valign:'bottom'});
+  const w17=720*17/71;
+  S('rect',{x:40,y:y+12,width:w17,height:30,fill:COL.bord},svg);S('rect',{x:40+w17,y:y+12,width:720-w17,height:30,fill:COL.teal},svg);
+  txt(svg,48,y+27,['17'],{fs:14*Math.min(K,1.2),anchor:'start',fill:'#fff',fw:700,valign:'middle'});
+  txt(svg,48+w17,y+27,['54'],{fs:14*Math.min(K,1.2),anchor:'start',fill:'#fff',fw:700,valign:'middle'});
+  txt(svg,40,y+50,wrap('верхняя роль',Math.round(20/K)),{fs:14.5*Math.min(K,1.3),anchor:'start',fill:COL.bord,fw:600,valign:'top'});
+  txt(svg,760,y+50,wrap('работа выделена в отдельную позицию',Math.round(24/K)),{fs:14.5*Math.min(K,1.3),anchor:'end',fill:COL.teal,fw:600,valign:'top'});
+  svg.setAttribute('viewBox','0 0 800 '+(y+60+36*K));
+}
+function drawObj(svg){
+  const steps=['вещь','свойство','процесс','отношение','организация','знание','сеть / платформа','люди + ИИ','пространство действий','возможные состояния'];
+  const bc=function(i){return i<6?COL.teal:(i===6||i===8?COL.ochre:(i===7?COL.indigo:COL.slate));};
+  const fsT=18*Math.min(K,1.3);
+  txt(svg,40,46,['Цепочка «СРТ-2050»: 10 ступеней'],{fs:fsT,anchor:'start',fw:700});
+  const x=function(i){return 58+i*(684/9);};
+  for(let i=0;i<10;i++){
+    if(i<9)S('line',{x1:x(i)+22,y1:110,x2:x(i+1)-22,y2:110,stroke:COL.line,'stroke-width':1.5},svg);
+    S('circle',{cx:x(i),cy:110,r:21,fill:'#fff',stroke:bc(i),'stroke-width':2.6},svg);
+    txt(svg,x(i),110,[String(i+1)],{fs:15*Math.min(K,1.2),fill:bc(i),fw:700,valign:'middle'});
+    txt(svg,x(i),i%2?186:142,wrap(steps[i],K>1?7:11),{fs:13*Math.min(K,1.25),fill:COL.ink,valign:'top'});
+  }
+  // легенда блоков
+  const leg=[[COL.teal,'1–6: все есть с VI в. до н. э.'],[COL.ochre,'7 и 9: заметны после 1945'],[COL.indigo,'8: это носитель'],[COL.slate,'10: редкая во все эпохи']];
+  let ly=262;
+  leg.forEach(function(l,k){const col=k%2,row=Math.floor(k/2);const lx=40+col*370,yy=ly+row*28*Math.min(K,1.3);S('rect',{x:lx,y:yy-9,width:14,height:14,rx:3,fill:l[0]},svg);txt(svg,lx+22,yy,[l[1]],{fs:15*Math.min(K,1.25),anchor:'start',valign:'middle'});});
+  // график долей
+  const top=400+(K>1?20:0),bot=750,x0=110,x1=740;
+  txt(svg,40,top-18,['Доля записей по эпохам, %'],{fs:fsT,anchor:'start',fw:700});
+  const org=[23,22,30,23,25,14],rel=[13,11,15,12,12,28];
+  const eps=['до IV в. до н. э.','IV в. до н. э. – V в.','VI–XV вв.','XVI–XVIII вв.','XIX в. – 1944','с 1945'];
+  const ex=function(i){return x0+i*(x1-x0)/5;};const ey=function(v){return bot-v/35*(bot-top-20);};
+  S('rect',{x:ex(5)-40,y:top,width:80,height:bot-top,fill:hexA(COL.bord,.07),rx:6},svg);
+  [0,10,20,30].forEach(function(v){S('line',{x1:x0-20,y1:ey(v),x2:x1+30,y2:ey(v),stroke:COL.pale,'stroke-width':1},svg);txt(svg,x0-30,ey(v),[String(v)],{fs:11.5*Math.min(K,1.25),anchor:'end',fill:COL.muted,valign:'middle'});});
+  const line=function(arr,col){let d='';arr.forEach(function(v,i){d+=(i?'L':'M')+ex(i)+' '+ey(v);});S('path',{d:d,fill:'none',stroke:col,'stroke-width':3},svg);arr.forEach(function(v,i){S('circle',{cx:ex(i),cy:ey(v),r:5,fill:col},svg);});};
+  line(org,COL.ink);line(rel,COL.bord);
+  txt(svg,ex(5)+14,ey(14)+4,['14'],{fs:13*Math.min(K,1.25),anchor:'start',fill:COL.ink,fw:700,valign:'top'});
+  txt(svg,ex(5)+14,ey(28)-4,['28'],{fs:13*Math.min(K,1.25),anchor:'start',fill:COL.bord,fw:700,valign:'bottom'});
+  txt(svg,ex(2),ey(30)-12,['организация'],{fs:13*Math.min(K,1.25),fill:COL.ink,fw:600,valign:'bottom'});
+  txt(svg,ex(1),ey(11)+14,['отношение + сеть'],{fs:13*Math.min(K,1.25),fill:COL.bord,fw:600,valign:'top'});
+  eps.forEach(function(e,i){txt(svg,ex(i),bot+16,wrap(e,K>1?8:11),{fs:12.5*Math.min(K,1.3),fill:COL.muted,valign:'top'});});
+  svg.setAttribute('viewBox','0 0 800 '+(bot+70*Math.min(K,1.3)));
+}
+function drawTM(svg){
+  const rows=[['конструирование',COL.ochre,[0.2,1.0,2.0,1.3,0.7],1,'пик на волну позже'],['проектирование',COL.teal,[0.5,0.6,1.5,1.7,0.3],2,'пик на волну позже'],['исследование',COL.indigo,[0.5,1.2,1.5,1.3,0.5],3,'пик на волну раньше'],['программирование',COL.bord,[0.5,0.5,0.6,1.3,2.2],4,'совпадает']];
+  const heads=[['до 1550',''],['0-я ПР','1550–1700'],['I ПР','1700–1850'],['II ПР','1850–2000'],['III ПР','с 2000']];
+  const kk=Math.min(K,1.3);
+  const cx=function(j){return 290+j*112;};const ry=function(i){return 178+i*110;};
+  heads.forEach(function(h,j){txt(svg,cx(j),70,h[1]?[h[0],h[1]]:[h[0]],{fs:13*kk,fw:600,fill:COL.ink,valign:'top'});});
+  rows.forEach(function(r,i){
+    txt(svg,36,ry(i)-6,[r[0]],{fs:15*Math.min(K,1.12),anchor:'start',fw:700,fill:r[1],valign:'bottom'});
+    txt(svg,36,ry(i)+6,[r[4]],{fs:12.5*Math.min(K,1.12),anchor:'start',fill:COL.muted,valign:'top'});
+    const peak=r[2].indexOf(Math.max.apply(null,r[2]));
+    r[2].forEach(function(v,j){
+      const rr=17*Math.sqrt(v);
+      if(j===r[3])S('circle',{cx:cx(j),cy:ry(i),r:40,fill:'none',stroke:r[1],'stroke-width':2,'stroke-dasharray':'5 4'},svg);
+      S('circle',{cx:cx(j),cy:ry(i),r:rr,fill:j===peak?r[1]:'#d6dae2'},svg);
+      txt(svg,cx(j),ry(i)+(j===peak?0:(j===r[3]?52:rr+14*kk)),['×'+v.toFixed(1).replace('.',',')],{fs:(j===peak?13:11.5)*kk,fill:j===peak?'#fff':COL.muted,fw:j===peak?700:500,valign:'middle'});
+    });
+  });
+  const by=ry(3)+88, base=by+120;
+  txt(svg,36,by+40,['без технологии','мышления, %'],{fs:14*Math.min(K,1.12),anchor:'start',fw:700,fill:COL.slate,valign:'middle'});
+  [88,79,65,62,73].forEach(function(v,j){const h=v*1.2;S('rect',{x:cx(j)-22,y:base-h,width:44,height:h,rx:3,fill:hexA(COL.slate,.45)},svg);txt(svg,cx(j),base-h-8,[String(v)],{fs:13*kk,fw:700,fill:COL.ink,valign:'bottom'});});
+  let ly=base+34*kk;
+  S('circle',{cx:50,cy:ly,r:11,fill:'none',stroke:COL.ink,'stroke-width':2,'stroke-dasharray':'4 3'},svg);
+  txt(svg,70,ly,['своя волна по схеме'],{fs:13*kk,anchor:'start',valign:'middle'});
+  S('circle',{cx:400,cy:ly,r:9,fill:COL.ink},svg);
+  txt(svg,418,ly,['пик в материале'],{fs:13*kk,anchor:'start',valign:'middle'});
+  txt(svg,36,ly+30*kk,wrap('Размер кружка — доля технологии в волне к её средней доле. Все выборки, 1588 записей.',Math.round(80/kk)),{fs:12*kk,anchor:'start',fill:COL.muted,valign:'top'});
+  svg.setAttribute('viewBox','0 0 800 '+(ly+70*kk));
+}
+
+/* ---------- вкладка 6: следствия ---------- */
+const NEXT=[
+ {id:'n1',name:'Сторона сделки, граница объекта',t:'Основание «положение относительно организации / сторона сделки» и ось «граница объекта». Без первого прогноз молчит о внешних исполнителях.'},
+ {id:'n2',name:'Прогноз с развилкой',t:'Пересчёт прогноза на 872 позициях с развилкой «выделится / поглотится». Сейчас прогноз знает только расщепление позиций.'},
+ {id:'n3',name:'Метки пустот',t:'На упорядоченных парах: противоречие, пусто по выборке, запрос есть — позиции нет. Третья метка — место для ненайденной позиции.'},
+ {id:'n4',name:'Доля машины',t:'Доля операций у машины по пятилеткам: способ из свода Лены. Тогда фильтр «носитель» получит данные.'},
+ {id:'n5',name:'Стык',t:'Четыре знания на рёбрах графа передач: единица работы, приёмка, адрес ответственности, допуск.'}
+];
+const RES_CARDS={
+ r0:function(){return '<h2>Главный результат</h2>'+chainHTML(['4 выборки','1 каталог','872 позиции'],2)+estHTML('Схема ложится на разнородный материал. 92 организации, креаторы, программы подготовки и финтех свелись в один каталог; 110 позиций подтверждены больше чем одной выборкой.')+'<p>Прогноз по прецедентам надёжен в одном: какая работа в фазах того же рода уже была и повторится. Нового он не показывает.</p><p>Новое видно в пустотах на упорядоченных осях, если пустоту не объясняют ни логика, ни отбор материала.</p>'+srcHTML('vyvody-kuba.md, раздел 6');},
+ r1:function(){return '<h2>Носитель: кто исполняет работу</h2>'+chainHTML(['старая работа','новый исполнитель'],1)+'<p>У всех 40 гипотез «СРТ-2050» есть исторические прецеденты, где работу делают люди.</p><p>Архитектор распределения права решения — составитель договора с князем в Новгороде. Архитектор доверия — эскроу Alipay (2003).</p>'+estHTML('Новое в 2050 году — прежде всего исполнитель, а не сама работа.')+srcHTML('proverka-40/proverka-40.md; vyvody-kuba.md, 6');},
+ r2:function(){return '<h2>Граница объекта</h2>'+chainHTML(['внутри целого','между сторонами','множество автономных участников'],-1)+'<p>Лестницы объектов за 2500 лет нет: шесть нижних ступеней есть в материале с VI века до н. э.</p><p>Сдвиг один, после 1945 года. Доля «организации» падает с 22–30% до 14%, доля «отношения и сети» растёт с 11–15% до 28%.</p>'+estHTML('Это единственная часть цепочки коллеги с направлением во времени. Кандидат в ось куба.')+srcHTML('shkala-obekta/shkala-obekta.md; vyvody-kuba.md, 5.12');},
+ r3:function(){return '<h2>Выделится или поглотится</h2>'+chainHTML(['выделится','поглотится','уйдёт в платформу','уйдёт в машину'],-1)+'<p>Верхняя роль — правитель, основатель, правление — держит работу в 17 из 71 точного случая. В остальных 54 работа выделена в отдельную позицию.</p><p>Смысл и принципы остаются у основателей: 6 из 7. Предметные работы — состояние объекта, исключения, риск, память, координация, платформа — выделяются.</p>'+estHTML('Прогноз куба знает только первую ветку. Остальные надо встроить.')+srcHTML('proverka-40/proverka-40.md; vyvody-kuba.md, 5.11');},
+ r4:function(){return '<h2>Сдвиг СРТ по фазам</h2>'+chainHTML(['институты','кооперация','познание'],-1)+'<p>2026–2030: пять из шести циклических оптик дают фазу слома и перестройки порядка. Их признаки требуют учреждения институтов и организации кооперации.</p><p>Оптики СРТ сходятся на институтах, кооперации и организации познания. Реже всего нужна организация системы деятельности — главная в прошлых фазах масштабирования.</p><p>2031–2040 — развилка оптик. Какая ветка сбудется, покажут признаки фаз, а не даты.</p>'+srcHTML('vyvody-kuba.md, 5.7; ekstrapolyaciya/1-cikly.md, 5-srt.md');},
+ nx:function(){return '<h2>Следующий цикл</h2>'+chainHTML(NEXT.map(function(n){return n.name;}),-1)+'<p>Пять шагов по порядку. Каждый закрывает место, где куб сейчас молчит.</p>'+srcHTML('vyvody-kuba.md, раздел 7');}
+};
+NEXT.forEach(function(n,k){RES_CARDS[n.id]=function(){return '<h2>Шаг '+(k+1)+'. '+esc(n.name)+'</h2>'+chainHTML(NEXT.map(function(x){return x.name;}),k)+'<p>'+esc(n.t)+'</p><p><span class="badge open">не начато</span>следующий цикл</p>'+srcHTML('vyvody-kuba.md, раздел 7');};});
+
+function drawResult(svg,sel,pick){
+  const C=400,P=function(r,a){return [C+r*Math.cos(a*PI/180),C+r*Math.sin(a*PI/180)];};
+  const defs=S('defs',{},svg);const mk=S('marker',{id:'arR',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},defs);S('path',{d:'M0,0 L10,5 L0,10 z',fill:COL.ink},mk);
+  const mk2=S('marker',{id:'arR2',viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},defs);S('path',{d:'M0,0 L10,5 L0,10 z',fill:COL.line},mk2);
+  const OR=285,onr=32;
+  const nextOn=sel==='nx'||sel.charAt(0)==='n';
+  const arcD=function(r,a0,a1,rev){const lg=(a1-a0)>180?1:0;const p0=P(r,a0),p1=P(r,a1);return rev?('M'+p1[0]+' '+p1[1]+' A'+r+' '+r+' 0 '+lg+' 0 '+p0[0]+' '+p0[1]):('M'+p0[0]+' '+p0[1]+' A'+r+' '+r+' 0 '+lg+' 1 '+p1[0]+' '+p1[1]);};
+  const lk=Math.min(K,1.3);
+  S('circle',{cx:28,cy:30,r:9,fill:'#fff',stroke:COL.bord,'stroke-width':2.4},svg);
+  txt(svg,46,30,['внутри — что нового в 2050 году'],{fs:14*lk,anchor:'start',valign:'middle',fill:COL.bord,fw:600});
+  S('circle',{cx:28,cy:30+28*lk,r:9,fill:'#fff',stroke:COL.indigo,'stroke-width':2.4,'stroke-dasharray':'4 3'},svg);
+  txt(svg,46,30+28*lk,['снаружи — шаги следующего цикла'],{fs:14*lk,anchor:'start',valign:'middle',fill:COL.indigo,fw:600});
+  // внешнее кольцо: 5 шагов
+  const oa=function(k){return -54+k*72;};
+  for(let k=0;k<5;k++){const a0=oa(k)+(onr+8)/OR*180/PI,a1=oa(k+1)-(onr+8)/OR*180/PI;if(k<4)S('path',{d:arcD(OR,a0,a1,false),fill:'none',stroke:nextOn?COL.ink:COL.line,'stroke-width':nextOn?2.6:1.6,'marker-end':nextOn?'url(#arR)':'url(#arR2)'},svg);}
+  NEXT.forEach(function(n,k){const a=oa(k);const p=P(OR,a);const on=sel===n.id;const g=S('g',{class:'hit'},svg);
+    S('circle',{cx:p[0],cy:p[1],r:onr,fill:on?COL.indigo:(nextOn?hexA(COL.indigo,.14):'#fff'),stroke:COL.indigo,'stroke-width':2.4,'stroke-dasharray':'5 4'},g);
+    txt(g,p[0],p[1],[String(k+1)],{fs:17*Math.min(K,1.2),fill:on?'#fff':COL.indigo,fw:700,valign:'middle'});
+    const c=Math.cos(a*PI/180),s=Math.sin(a*PI/180);let lp=P(OR+onr+9,a);
+    let anchor=c>0.35?'start':(c<-0.35?'end':'middle');let va=s<-0.35?'bottom':(s>0.35?'top':'middle');
+    if(Math.abs(c)>0.9){lp[0]=p[0];lp[1]=p[1]+onr+8;anchor='middle';va='top';}
+    txt(g,lp[0],lp[1],wrap(n.name,Math.round(13/K)),{fs:15*K,anchor:anchor,valign:va,fw:on?700:500});
+    g.addEventListener('click',function(){pick(n.id);});});
+  // внутренние узлы
+  const IN=[{id:'r1',l:['носитель'],c:COL.bord},{id:'r2',l:['граница','объекта'],c:COL.teal},{id:'r3',l:['выделится /','поглотится'],c:COL.ochre},{id:'r4',l:['сдвиг','СРТ'],c:COL.indigo}];
+  const ia=[-135,-45,45,135],IR=168,inr=52;
+  IN.forEach(function(n,k){const p=P(IR,ia[k]);const on=sel===n.id||sel==='r0';
+    const p0=P(80,ia[k]),p1=P(IR-inr,ia[k]);S('line',{x1:p0[0],y1:p0[1],x2:p1[0],y2:p1[1],stroke:on?COL.ink:COL.line,'stroke-width':on?3:1.3},svg);
+    const g=S('g',{class:'hit'},svg);S('circle',{cx:p[0],cy:p[1],r:inr,fill:sel===n.id?n.c:(sel==='r0'?hexA(n.c,.14):'#fff'),stroke:n.c,'stroke-width':2.6},g);
+    txt(g,p[0],p[1],n.l,{fs:14*Math.min(K,1.02),fill:sel===n.id?'#fff':n.c,fw:700,valign:'middle',lh:17*Math.min(K,1.15)});
+    g.addEventListener('click',function(){pick(n.id);});});
+  const hub=S('g',{class:'hit'},svg);S('circle',{cx:C,cy:C,r:78,fill:COL.ink},hub);
+  txt(hub,C,C,['Главный','результат'],{fs:16*Math.min(K,1.2),fill:'#fff',fw:600,valign:'middle'});
+  hub.addEventListener('click',function(){pick('r0');});
+}
+
+/* ---------- состояние ---------- */
+const tabsEl=document.getElementById('tabs'),chipsEl=document.getElementById('chips'),svgEl=document.getElementById('svg'),explainEl=document.getElementById('explain'),lensEl=document.getElementById('lensLbl'),hintEl=document.getElementById('hint');
+const state={t:0,sel:TABS.map(function(t){return t.chips[0].id;})};
+TABS.forEach(function(t,i){const b=document.createElement('button');b.innerHTML='<span class="n">'+(i+1)+'</span>'+esc(t.title);b.addEventListener('click',function(){state.t=i;render(true);});tabsEl.appendChild(b);});
+function pick(id){state.sel[state.t]=id;render(true);}
+function render(push){
+  K=window.innerWidth<640?1.45:1;
+  const t=TABS[state.t],sel=state.sel[state.t];
+  Array.prototype.forEach.call(tabsEl.children,function(b,i){b.classList.toggle('on',i===state.t);});
+  lensEl.textContent=t.lens;
+  chipsEl.innerHTML='';
+  t.chips.forEach(function(c){const b=document.createElement('button');b.innerHTML=c.html;if(c.id===sel)b.classList.add('on');b.addEventListener('click',function(){pick(c.id);});chipsEl.appendChild(b);});
+  while(svgEl.firstChild)svgEl.removeChild(svgEl.firstChild);
+  svgEl.setAttribute('viewBox','0 0 800 800');
+  t.draw(svgEl,sel,pick);
+  hintEl.textContent=t.hint||'';hintEl.style.display=t.hint?'':'none';
+  explainEl.innerHTML=t.card(sel);
+  document.body.setAttribute('data-tab','t'+(state.t+1));document.body.setAttribute('data-sel',sel);
+  if(push){try{history.replaceState(null,'','#t'+(state.t+1)+'-'+sel);}catch(e){}}
+}
+function fromHash(){
+  const m=/^#t(\d)(?:-(\w+))?/.exec(location.hash||'')||/[?&]t=(\d)(?:&s=(\w+))?/.exec(location.search||'');
+  if(m){const i=Math.max(0,Math.min(TABS.length-1,parseInt(m[1],10)-1));state.t=i;
+    if(m[2]){const t=TABS[i];let id=m[2];if(/^\d+$/.test(id)){const n=parseInt(id,10)-1;if(t.chips[n])id=t.chips[n].id;}if(t.chips.some(function(c){return c.id===id;})||(i===5&&RES_CARDS[id]))state.sel[i]=id;}}
+}
+fromHash();render(false);
+window.addEventListener('hashchange',function(){fromHash();render(false);});
+let rt=null;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){render(false);},120);});
+})();
+</script>
+</body>
+</html>
